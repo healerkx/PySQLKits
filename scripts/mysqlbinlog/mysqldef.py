@@ -53,6 +53,12 @@ def from_unixtime(timestamp):
 def get_table_id(b1, b2, b3):
     return b3 * (2 ** 32)  + b2 * (2 * 16) + b1
 
+def pbytes(bytes, delimiter='--', prefix='@@'):
+    print(delimiter * 20)
+    for i in bytes:
+        print(prefix, i)
+    print(delimiter * 20)
+
 class EventHandler:
     def __init__(self):
         self.handlers = dict()
@@ -152,4 +158,26 @@ class FieldType:
 
 
 
-print(FieldType.to_name(15))
+class BigEndian:
+
+    
+
+    @staticmethod
+    def uint8(b):
+        return b[0]
+
+    @staticmethod
+    def uint16(b):
+        return b[0] <<8 | b[1]
+
+    @staticmethod
+    def uint24(b):
+        return b[0] <<16 | b[1] <<8 | b[2]
+
+    @staticmethod
+    def uint32(b):
+        return b[0] <<24 | b[1] <<16 | b[2] <<8 | b[3]
+
+    @staticmethod
+    def uint40(b):
+        return (b[0]) <<32 | (b[1]) <<24 | (b[2]) <<16 | (b[3]) <<8 | (b[4])

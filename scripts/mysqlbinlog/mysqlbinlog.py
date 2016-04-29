@@ -191,8 +191,9 @@ class BinlogReader:
         nullable_bits_size = (col_count + 7) // 8
         nullable_bits = data[:nullable_bits_size]
 
-        parse_table_map(col_types, metadata, nullable_bits)
-
+        #pbytes(metadata)
+        field_discriptors = parse_table_map(col_types, metadata, nullable_bits)
+        self.cur_field_discriptors = field_discriptors
         chunksum = self.read_bytes(4)
         return (table_id, dbname)
 
@@ -227,10 +228,31 @@ class BinlogReader:
         return self.bytes_2_leuint(bytes[1:size]), size
 
 
+    def read_row_values(self, col_count, data):
+        null_array = []
+        for i in range(0, col_count):
+            is_null = (data[i // 8] & (1 << (i % 8))) != 0 # is_null OK?
+            null_array.append(is_null)
+        starts = (col_count + 7) // 8
+        data = data[starts:]
+        #print(self.cur_field_discriptors)
+        for i in range(0, col_count):
+            
+            fd =self.cur_field_discriptors[i]
+            is_null = null_array[i]
+            if not is_null:
+                value, data = fd.parse(data)
+                print("value=%s" % value)
+                #exit()
+            else:
+                print("value=null")
+        return data
+    
+
     """
     insert, update, delete
     """
-    def read_rows_event(self, header):
+    def read_rows_event(self, header, update=False):
         post_header_len = 8
         c = self.read_bytes(post_header_len)
         # table_id mask by 0x00ffffff
@@ -256,16 +278,18 @@ class BinlogReader:
         data = self.read_bytes(data_len - 4)
 
         col_count, size = self.read_field_length(data)
+        data = data[size:]
         print(col_count, size)
 
         bmp1_size = int((col_count + 7) / 8)
         bmp2_size = int((col_count + 7) / 8)
+        bmp = data[: bmp1_size + bmp2_size]
+        print(bmp)
         
-
-        print("@@@" * 10)
-        for d in data:
-            print(d)
-        print("---" * 10)
+        data = data[bmp1_size + bmp2_size:]
+        remain = self.read_row_values(col_count, data)
+        if update:
+            self.read_row_values(col_count, remain)
         #exit()
         # chucksum
         chucksum = self.read_bytes(4)
@@ -286,7 +310,7 @@ class BinlogReader:
     @eh.handle(EventType.UPDATE_ROWS_EVENT2)
     def read_update_rows_event(self, header):
         print('update')
-        self.read_rows_event(header)
+        self.read_rows_event(header, True)
 
     @eh.handle(EventType.DELETE_ROWS_EVENT2)
     def read_delete_rows_event(self, header):
@@ -334,6 +358,7 @@ class BinlogReader:
         return xid
 
     """
+    File event loop
     """
     def read_all_events(self, forever=False):
         while True:
