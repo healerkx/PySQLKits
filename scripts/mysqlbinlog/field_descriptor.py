@@ -42,7 +42,8 @@ class tiny_descriptor(base_descriptor):
     def parse(self, data):
         c = data[0:1]
         d = data[1:]
-        return struct.unpack('=B', c), d
+        i, = struct.unpack('=B', c)
+        return i, d
 
 
 @dh.handle(FieldType.SHORT)
@@ -53,7 +54,8 @@ class short_descriptor(base_descriptor):
     def parse(self, data):
         c = data[0:2]
         d = data[2:]
-        return struct.unpack('=H', c), d
+        i, = struct.unpack('=H', c)
+        return i, d
 
 @dh.handle(FieldType.LONG)
 class long_descriptor(base_descriptor):
@@ -63,7 +65,8 @@ class long_descriptor(base_descriptor):
     def parse(self, data):
         c = data[0:4]
         d = data[4:]
-        return struct.unpack('=I', c), d
+        i, = struct.unpack('=I', c)
+        return i, d
 
 @dh.handle(FieldType.DECIMAL)
 class decimal_descriptor(base_descriptor):

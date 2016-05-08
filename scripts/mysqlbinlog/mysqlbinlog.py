@@ -236,26 +236,27 @@ class BinlogReader:
             return -1, 0
         return self.bytes_2_leuint(bytes[1:size]), size
 
-
+    """
+    """
     def read_row_values(self, col_count, data):
+        items = []
         null_array = []
         for i in range(0, col_count):
             is_null = (data[i // 8] & (1 << (i % 8))) != 0 # is_null OK?
             null_array.append(is_null)
         starts = (col_count + 7) // 8
-        data = data[starts:]
+        remain = data[starts:]
         #print(self.cur_field_discriptors)
         for i in range(0, col_count):
             
             fd =self.cur_field_discriptors[i]
             is_null = null_array[i]
             if not is_null:
-                value, data = fd.parse(data)
-                print("value=%s" % value)
-                #exit()
+                value, remain = fd.parse(remain)
+                items.append(value)
             else:
-                print("value=null")
-        return data
+                items.append(None)
+        return items, remain
     
 
     """
@@ -295,36 +296,40 @@ class BinlogReader:
         bmp = data[: bmp1_size + bmp2_size]
         print(bmp)
         
-        data = data[bmp1_size + bmp2_size:]
-        remain = self.read_row_values(col_count, data)
+        remain = data[bmp1_size:]
         if update:
-            self.read_row_values(col_count, remain)
-        #exit()
+            remain = data[bmp1_size + bmp2_size:]
+
+        items, remain = self.read_row_values(col_count, remain)
+        items2 = None
+        if update:
+            items2, _ =self.read_row_values(col_count, remain)
+
         # chucksum
         chucksum = self.read_bytes(4)
 
-        return data
+        return (items, items2)
 
     """
     insert values
     """
     @eh.handle(EventType.WRITE_ROWS_EVENT2)
     def read_write_rows_event(self, header):
-        print('write')
-        self.read_rows_event(header)
+        items = self.read_rows_event(header)
+        return items
 
     """
     update
     """
     @eh.handle(EventType.UPDATE_ROWS_EVENT2)
     def read_update_rows_event(self, header):
-        print('update')
-        self.read_rows_event(header, True)
+        items = self.read_rows_event(header, True)
+        return items
 
     @eh.handle(EventType.DELETE_ROWS_EVENT2)
     def read_delete_rows_event(self, header):
-        print('delete')
-        self.read_rows_event(header)
+        items = self.read_rows_event(header)
+        return items
 
     def bytes_2_leuint(self, bytes):
         val = 0
@@ -381,13 +386,15 @@ class BinlogReader:
                     break
 
             if not self.is_concern_event(header.type_code):
-                print('Skip this event')
+                # Skip this event
                 default_handler(self, header)
                 continue
-                
+
             print(header)
             handler = eh.get_handler(header.type_code)
-            handler(self, header)
+            results = handler(self, header)
+            if header.type_code in [30, 31, 32]:
+                print(results)
 
 
 """
