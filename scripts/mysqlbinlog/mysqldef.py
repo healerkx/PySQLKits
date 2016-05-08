@@ -43,6 +43,7 @@ class EventType :
     UPDATE_ROWS_EVENT2 = 31
     DELETE_ROWS_EVENT2 = 32
     # ----------------------------------
+
     
 
 def from_unixtime(timestamp):

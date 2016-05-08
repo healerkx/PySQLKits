@@ -23,6 +23,7 @@ class BinlogReader:
         self.file = None
         self.current_binlog_file = None
         self.openfile(filename)
+        self.concern_events = []
 
     def openfile(self, filename):
         if self.file is not None:
@@ -73,6 +74,14 @@ class BinlogReader:
             next_binlog_id = int(self.current_binlog_file[dot + 1:]) + 1
             filename = self.current_binlog_file[:dot] + ('.%06d' % next_binlog_id)
         self.openfile(filename)
+
+    def set_concern_events(self, concern_events):
+        self.concern_events = concern_events
+
+    def is_concern_event(self, event):
+        if self.concern_events is None or len(self.concern_events) == 0:
+            return True
+        return event in self.concern_events
 
     """
     Only handle MySQL event header v4 (MySQL 5.0+) 
@@ -361,6 +370,7 @@ class BinlogReader:
     File event loop
     """
     def read_all_events(self, forever=False):
+        default_handler = eh.get_handler(EventType.UNKNOWN_EVENT)
         while True:
             header = self.read_event_header()
             if header is None:
@@ -370,6 +380,11 @@ class BinlogReader:
                 else:
                     break
 
+            if not self.is_concern_event(header.type_code):
+                print('Skip this event')
+                default_handler(self, header)
+                continue
+                
             print(header)
             handler = eh.get_handler(header.type_code)
             handler(self, header)
@@ -379,7 +394,11 @@ class BinlogReader:
 Test main
 """
 if __name__ == '__main__':
-    br = BinlogReader('f:\\MySQL\\binlog.000001')
+    br = BinlogReader('f:\\MySQL\\log\\data.000001')
+
+    # set a concern event list
+    # br.set_concern_events([EventType.TABLE_MAP_EVENT])
+
     # print all handlers registered
     # print(eh.handlers)
     br.read_all_events()
