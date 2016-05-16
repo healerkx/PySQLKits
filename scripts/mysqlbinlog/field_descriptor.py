@@ -134,10 +134,15 @@ class varchar_descriptor(base_descriptor):
         self.max_len = metadata[0] | metadata[1] * 256
 
     def parse(self, data):
-        strlen, = struct.unpack('H', data[0:2])
-        sbytes = data[2:2 + strlen]
+        plen = 2
+        ptype = 'H'
+        if self.max_len < 256:
+            plen = 1
+            ptype = 'B'
+        strlen, = struct.unpack(ptype, data[0:plen])
+        sbytes = data[plen:plen + strlen]
         s, = struct.unpack('=%ds' % strlen, sbytes)
-        return s, data[2 + strlen:]
+        return s, data[plen + strlen:]
 
 
 @dh.handle(FieldType.STRING)

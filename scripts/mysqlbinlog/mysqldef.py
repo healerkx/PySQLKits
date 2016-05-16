@@ -70,9 +70,7 @@ class EventHandler:
     def handle(self, event):
         def handler(func):
             self.handlers[event] = func # Register a event handler
-            def inner_handler(self, header):
-                return func(self, header)
-            return inner_handler
+
         return handler
 
     def get_handler(self, event):

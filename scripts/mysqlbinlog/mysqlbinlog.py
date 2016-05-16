@@ -24,6 +24,7 @@ class BinlogReader:
         self.current_binlog_file = None
         self.openfile(filename)
         self.concern_events = []
+        self.skip_next = False
 
     def openfile(self, filename):
         if self.file is not None:
@@ -246,13 +247,15 @@ class BinlogReader:
             null_array.append(is_null)
         starts = (col_count + 7) // 8
         remain = data[starts:]
+
         #print(self.cur_field_discriptors)
         for i in range(0, col_count):
             
-            fd =self.cur_field_discriptors[i]
+            fd = self.cur_field_discriptors[i]
             is_null = null_array[i]
             if not is_null:
                 value, remain = fd.parse(remain)
+                # print('value', value)
                 items.append(value)
             else:
                 items.append(None)
@@ -303,7 +306,7 @@ class BinlogReader:
         items, remain = self.read_row_values(col_count, remain)
         items2 = None
         if update:
-            items2, _ =self.read_row_values(col_count, remain)
+            items2, _ = self.read_row_values(col_count, remain)
 
         # chucksum
         chucksum = self.read_bytes(4)
@@ -385,7 +388,7 @@ class BinlogReader:
                 else:
                     break
 
-            if not self.is_concern_event(header.type_code):
+            if not self.is_concern_event(header.type_code) or self.skip_next:
                 # Skip this event
                 default_handler(self, header)
                 continue
@@ -393,20 +396,23 @@ class BinlogReader:
             print(header)
             handler = eh.get_handler(header.type_code)
             results = handler(self, header)
-            if header.type_code in [30, 31, 32]:
-                print(results)
+            yield (header.type_code, results)
+
+
 
 
 """
 Test main
 """
 if __name__ == '__main__':
+
     br = BinlogReader('f:\\MySQL\\log\\data.000001')
 
     # set a concern event list
     # br.set_concern_events([EventType.TABLE_MAP_EVENT])
-
+    
     # print all handlers registered
     # print(eh.handlers)
-    br.read_all_events()
+    for e in br.read_all_events():
+        print(e)
     
