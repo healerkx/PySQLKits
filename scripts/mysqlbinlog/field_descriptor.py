@@ -142,7 +142,7 @@ class varchar_descriptor(base_descriptor):
         strlen, = struct.unpack(ptype, data[0:plen])
         sbytes = data[plen:plen + strlen]
         s, = struct.unpack('=%ds' % strlen, sbytes)
-        return s, data[plen + strlen:]
+        return s.decode('utf8'), data[plen + strlen:]
 
 
 @dh.handle(FieldType.STRING)

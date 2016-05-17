@@ -205,7 +205,7 @@ class BinlogReader:
         field_discriptors = parse_table_map(col_types, metadata, nullable_bits)
         self.cur_field_discriptors = field_discriptors
         chunksum = self.read_bytes(4)
-        return (table_id, dbname)
+        return (table_id, dbname, tablename)
 
     def bytes_2_leuint(self, bytes):
         val = 0

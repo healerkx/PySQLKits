@@ -3,13 +3,27 @@
 
 import redis
 from mysqlbinlog import *
-
+import json
 
 class RedisHandler:
     def __init__(self):
         self.client = redis.Redis(host='127.0.0.1', port=6379, db=0)
         self.concern_tables = []
         self.reader = None
+
+    def get_json(self, item):
+        print("$", self.current_table_name)
+        if self.table_define is None or self.current_table_name not in self.table_define:
+            return json.dumps(item)
+        table_define = self.table_define[self.current_table_name]
+        d = dict()
+        idx = 0
+        for field in table_define:
+            d[field] = item[idx]
+            idx += 1
+        return json.dumps(d)
+
+
 
     def insert_data(self, data):
         pass
@@ -21,7 +35,8 @@ class RedisHandler:
         pass
 
     def set_current_table(self, data):
-        table_name = data[1]
+        table_name = data[2]
+        self.current_table_name = table_name
         self.reader.skip_next = False
         if self.concern_tables is not None:
             if table_name in self.concern_tables:
@@ -52,7 +67,7 @@ class MySQLRowData:
 
         # print all handlers registered
         # print(eh.handlers)
-        for result in self.reader.read_all_events():
+        for result in self.reader.read_all_events(True):
             event = result[0]
             data = result[1]
             if event == EventType.WRITE_ROWS_EVENT2:
