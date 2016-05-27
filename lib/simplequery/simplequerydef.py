@@ -25,10 +25,18 @@ reserved = {
     
 }
 
+use_lex_print = False
+use_yacc_print = True
+
+
 def lex_print(*p):
+    if not use_lex_print:
+        return
     print('Lex:', p)
 
 def yacc_print(*p):
+    if not use_yacc_print:
+        return    
     print('Yacc:', p)
 
 
@@ -138,7 +146,7 @@ yacc start
 def p_statements(p):
     """statements   :   statements statement
                     |   statement """
-    print("#", len(p))
+    # print("#", len(p))
     if len(p) == 2:
         p[0] = [p[1]]
     else:

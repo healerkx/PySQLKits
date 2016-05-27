@@ -9,22 +9,25 @@ from simplequery import *
 code = """
 com = kx_company(create_time=@today, @limit=5, @asc=company_id);
 @show(com, 5, '');
-user = kx_user(name='healer', create_time=@today, company_id=com.company_id);
+@html(com);
+@browser();
+user = kx_user(company_id=com.company_id);
 """
 
 def get_mysql_connection():
-	args = {'host':'localhost', 'user':'root', 'passwd':'root', 'db':"test"}
-	conn = MySQLdb.connect(**args)
+    args = {'host':'localhost', 'user':'root', 'passwd':'root', 'db':"test"}
+    conn = MySQLdb.connect(**args)
 
-	with conn.cursor() as c:
-		c.execute('show databases;')
-		
-		print(list(map(lambda x: x[0], c.fetchall())))
-	return conn
+    with conn.cursor() as c:
+        c.execute('show databases;')
+        
+        print(list(map(lambda x: x[0], c.fetchall())))
+    return conn
 
 """
 """
 if __name__ == '__main__':
+
     e = SimpleQueryExecutor()
     conn = get_mysql_connection()
     #print(conn)

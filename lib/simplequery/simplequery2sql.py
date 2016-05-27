@@ -36,7 +36,17 @@ class SimpleQueryTranslator:
             return "%s" % p
 
     def get_symbol_value(self, sym_str):
-        return [1, 2]
+        var, field = sym_str.split('.')
+        dataset_list = []
+        for exec_state in self.exec_states:
+            if var == exec_state[0]:
+                dataset_list = list(exec_state[1])
+
+                break
+        values = []
+        for dataset in dataset_list:
+            values.append(dataset[field])
+        return values
 
     def can_convert_to_sql(self, statement):
         body = statement[2]
