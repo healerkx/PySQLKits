@@ -92,5 +92,6 @@ class SimpleQueryTranslator:
             conditions = self.get_select_conditions(param_list)
 
             sql = "select * from %s where %s" % (table_name, conditions)
-            print(sql)
+            # print(sql)
+            return sql
         return None

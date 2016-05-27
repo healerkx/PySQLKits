@@ -1,6 +1,7 @@
 
 import ply.lex as lex
 import ply.yacc as yacc
+import MySQLdb
 
 from simplequerydef import *
 from simplequery2sql import *
@@ -42,20 +43,31 @@ class SimpleQueryExecutor:
     def set_connection(self, conn):
         self.conn = conn
 
+    def __dump_exec_states(self):
+        for exec_state in self.exec_states:
+            print(exec_state) 
+
+    def __exec_query(self, receiver, sql):
+        with self.conn.cursor(MySQLdb.cursors.DictCursor) as cursor:
+            r = cursor.execute(sql)
+
+            results = cursor.fetchall()
+            exec_state = (receiver, results, sql)
+            self.exec_states.append(exec_state)
+            return True
+        return False
+
     def __run_statement(self, statement):
         print(statement)
         t = SimpleQueryTranslator()
         if t.can_convert_to_sql(statement):
             t.set_exec_states(self.exec_states)
             sql = t.simple_query_to_sql(statement)
-            if self.conn:
-                cursor = self.conn.cursor()
-                r = cursor.execute(sql)
-                results = cursor.fetchall()
-                exec_state = (statement[1], results)
-                self.exec_states.append(exec_state)
-                cursor.close()
-            print("~", sql)
+            if self.conn is None:
+                assert(False)
+
+            if self.__exec_query(statement[1], sql):
+                self.__dump_exec_states()
         else:
             pass
 
