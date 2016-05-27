@@ -8,7 +8,7 @@ from simplequery import *
 
 code = """
 com = kx_company(create_time=@today, @limit=5, @asc=company_id);
-@show(com, 5, '');
+@p(com);
 @html(com);
 @browser();
 user = kx_user(company_id=com.company_id);

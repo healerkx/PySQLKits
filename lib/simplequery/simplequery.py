@@ -5,6 +5,7 @@ import MySQLdb
 
 from simplequerydef import *
 from simplequery2sql import *
+from simplequeryfuncs import *
 
 class SimpleQueryStatements:
 
@@ -57,6 +58,11 @@ class SimpleQueryExecutor:
             return True
         return False
 
+    def __exec(self, receiver, func):
+        print("~", receiver, func)
+        results = Funcs.call(func)
+        exit()
+
     def __run_statement(self, statement):
         print(statement)
         t = SimpleQueryTranslator()
@@ -68,8 +74,12 @@ class SimpleQueryExecutor:
 
             if self.__exec_query(statement[1], sql):
                 self.__dump_exec_states()
-        else:
-            pass
+        elif t.is_buildin_call(statement):
+            t.set_exec_states(self.exec_states)
+            func = t.simple_query_to_call(statement)
+
+            self.__exec(statement[1], func)
+            
 
     def run(self, code):
         s = SimpleQueryStatements()

@@ -11,6 +11,52 @@ def sym_to_str(sym):
         return sym_to_str(sym[1]) + '.' + sym[2]
 
 
+class Arg:
+    def __init__(self):
+        self.__name = None
+
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, name):
+        self.__name = name
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, value):
+        self.__value = value
+
+    def __str__(self):
+        return "<%s=%s>" % (self.__name, self.__value)
+
+
+class Func:
+    func_name = None
+    args = []
+    
+    def __init__(self, func_name, args):
+        self.func_name = func_name
+        self.args = args
+
+    def __str__(self):
+        """
+        For dump the Func object
+        """
+        args_str_list = []
+        for arg in self.args:
+            if isinstance(arg, str):
+                arg = "'%s'" % arg
+            args_str_list.append(str(arg))
+        args_str = ', '.join(args_str_list)
+        return "<%s(%s)>" % (self.func_name, args_str)
+
+"""
+"""
 class SimpleQueryTranslator:
     exec_states = []
 
@@ -35,18 +81,30 @@ class SimpleQueryTranslator:
         elif isinstance(p, int) or isinstance(p, float):
             return "%s" % p
 
-    def get_symbol_value(self, sym_str):
-        var, field = sym_str.split('.')
-        dataset_list = []
-        for exec_state in self.exec_states:
-            if var == exec_state[0]:
-                dataset_list = list(exec_state[1])
-
-                break
+    def get_field_value(self, var, field):
+        dataset_list = self.get_val_value(var)
         values = []
         for dataset in dataset_list:
             values.append(dataset[field])
         return values
+
+    def get_val_value(self, var):
+        dataset_list = []
+        for exec_state in self.exec_states:
+            if var == exec_state[0]:
+                dataset_list = list(exec_state[1])
+                break
+        return dataset_list     
+
+    def get_symbol_value(self, sym_str):
+        var = sym_str
+        if '.' in sym_str:
+            var, field = sym_str.split('.')
+            values = self.get_field_value(var, field)
+            return values
+        else:
+            return self.get_val_value(var)
+
 
     def can_convert_to_sql(self, statement):
         body = statement[2]
@@ -55,6 +113,14 @@ class SimpleQueryTranslator:
             if not func_name.startswith('@'):
                 return True
         return False
+
+    def is_buildin_call(self, statement):
+        body = statement[2]
+        if body[0] == 'func':
+            func_name = body[1]
+            if func_name.startswith('@'):
+                return True
+        return False        
 
     def get_select_condition(self, assign):
         lvalue = assign[1]
@@ -89,6 +155,32 @@ class SimpleQueryTranslator:
                 conditions.append(self.get_select_condition(body))
         return ' AND '.join(conditions)
 
+    def parse_arg(self, body):
+        return None
+
+    def get_args(self, param_list):
+        args = []
+        for param in param_list:
+            body = param[1]
+            if isinstance(body, tuple):
+                param_type = body[0]
+                if param_type == 'assign' and not body[1].startswith('@'):
+                    args.append(body)
+                elif param_type == 'sym':
+                    arg = Arg()
+                    sym_str = sym_to_str(body)
+                    
+                    arg.name = sym_str
+                    arg.value = self.get_symbol_value(sym_str)
+                    print("~~~", arg)
+                    args.append(arg)
+            elif isinstance(body, int):
+                args.append(body)
+            elif isinstance(body, str):
+                args.append(body)
+
+        return args
+
     """
     :param: exec_states []
     """
@@ -105,3 +197,16 @@ class SimpleQueryTranslator:
             # print(sql)
             return sql
         return None
+
+    def simple_query_to_call(self, statement):
+        receiver_name = statement[1]
+        body = statement[2]
+        if body[0] == 'func':
+            func_name = body[1]
+            param_list = body[2]
+
+            args = self.get_args(param_list)
+
+            return Func(func_name, args)
+            
+        return None        
