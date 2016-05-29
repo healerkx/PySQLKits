@@ -1,5 +1,6 @@
 
 import datetime
+from simplequeryhandle import *
 
 def is_sym(sym):
     return sym[0] == 'sym'
@@ -11,30 +12,8 @@ def sym_to_str(sym):
         return sym_to_str(sym[1]) + '.' + sym[2]
 
 
-class Arg:
-    def __init__(self):
-        self.__name = None
-
-    @property
-    def name(self):
-        return self.__name
-
-    @name.setter
-    def name(self, name):
-        self.__name = name
-
-    @property
-    def value(self):
-        return self.__value
-
-    @value.setter
-    def value(self, value):
-        self.__value = value
-
-    def __str__(self):
-        return "<%s=%s>" % (self.__name, self.__value)
-
-
+"""
+"""
 class Func:
     func_name = None
     args = []
@@ -92,7 +71,7 @@ class SimpleQueryTranslator:
         dataset_list = []
         for exec_state in self.exec_states:
             if var == exec_state[0]:
-                dataset_list = list(exec_state[1])
+                dataset_list = exec_state[1]
                 break
         return dataset_list     
 
@@ -167,13 +146,10 @@ class SimpleQueryTranslator:
                 if param_type == 'assign' and not body[1].startswith('@'):
                     args.append(body)
                 elif param_type == 'sym':
-                    arg = Arg()
+
                     sym_str = sym_to_str(body)
-                    
-                    arg.name = sym_str
-                    arg.value = self.get_symbol_value(sym_str)
-                    print("~~~", arg)
-                    args.append(arg)
+                    value = self.get_symbol_value(sym_str)
+                    args.append(value)
             elif isinstance(body, int):
                 args.append(body)
             elif isinstance(body, str):

@@ -7,10 +7,13 @@ sys.path.append('D:\\Projects\\PySQLKits\\lib\\simplequery')
 from simplequery import *
 
 code = """
+h = @fopen('d:\\a.html');
+@fwrite(h, '<div>World</div>');
+@fclose(h);
+@render(h);
+
 com = kx_company(create_time=@today, @limit=5, @asc=company_id);
 @p(com);
-@html(com);
-@browser();
 user = kx_user(company_id=com.company_id);
 """
 

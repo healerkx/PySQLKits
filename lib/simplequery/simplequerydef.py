@@ -26,7 +26,7 @@ reserved = {
 }
 
 use_lex_print = False
-use_yacc_print = True
+use_yacc_print = False
 
 
 def lex_print(*p):

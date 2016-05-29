@@ -53,6 +53,10 @@ class SimpleQueryExecutor:
             r = cursor.execute(sql)
 
             results = cursor.fetchall()
+            handle = Handle()
+            handle.set_type('dataset')
+            handle.set_name(receiver)
+            handle.set_value(results)
             exec_state = (receiver, results, sql)
             self.exec_states.append(exec_state)
             return True
@@ -60,11 +64,12 @@ class SimpleQueryExecutor:
 
     def __exec(self, receiver, func):
         print("~", receiver, func)
-        results = Funcs.call(func)
-        exit()
+        result = Funcs.call(func)
+        return result
 
     def __run_statement(self, statement):
         print(statement)
+        receiver = statement[1]
         t = SimpleQueryTranslator()
         if t.can_convert_to_sql(statement):
             t.set_exec_states(self.exec_states)
@@ -72,33 +77,24 @@ class SimpleQueryExecutor:
             if self.conn is None:
                 assert(False)
 
-            if self.__exec_query(statement[1], sql):
+            if self.__exec_query(receiver, sql):
                 self.__dump_exec_states()
         elif t.is_buildin_call(statement):
             t.set_exec_states(self.exec_states)
             func = t.simple_query_to_call(statement)
-
-            self.__exec(statement[1], func)
+            print("@@@@", func)
+            handle = self.__exec(receiver, func)
+            exec_state = (receiver, handle)
+            self.exec_states.append(exec_state)
             
 
     def run(self, code):
         s = SimpleQueryStatements()
         statements = s.parse(code)
+        print('Starts to Run')
         for statement in statements:
             # print(statement)
             self.__run_statement(statement)
+            print('-------- A statement. --------')
+            print('-------- A statement. --------')
 
-
-code = """
-com = kx_company(company_id=4, time=@today, @limit=5, @asc=company_id);
-@show(com, 5, '');
-user = kx_user(user_id=13, name='healer', time=@today, status=com.a.status);
-"""
-
-
-if __name__ == '__main__':
-    e = SimpleQueryExecutor()
-    conn = None
-    e.set_connection(conn)
-    e.run(code)
-    
