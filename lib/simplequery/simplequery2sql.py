@@ -61,19 +61,23 @@ class SimpleQueryTranslator:
             return "%s" % p
 
     def get_field_value(self, var, field):
-        dataset_list = self.get_val_value(var)
+        handle = self.get_val_value(var)
+        if handle.get_type() != 'dataset':
+            return []
+        dataset_list = handle.get_value()
         values = []
         for dataset in dataset_list:
             values.append(dataset[field])
         return values
 
     def get_val_value(self, var):
-        dataset_list = []
+        handle = None
         for exec_state in self.exec_states:
             if var == exec_state[0]:
-                dataset_list = exec_state[1]
+                handle = exec_state[1]
+                
                 break
-        return dataset_list     
+        return handle     
 
     def get_symbol_value(self, sym_str):
         var = sym_str

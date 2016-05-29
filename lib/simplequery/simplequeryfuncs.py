@@ -13,11 +13,14 @@ def buildin(func):
     return func
 
 @buildin
-def p(c):
+def p(handle):
     print('@' * 40)
-    print(type(c))
-    print(c)
-    return len(str(c))
+    if handle.get_type() == 'dataset':
+        datesets = handle.get_value()
+        for dataset in datesets:
+            print(dataset)
+        return True
+    return False
 
 @buildin
 def fopen(filename):

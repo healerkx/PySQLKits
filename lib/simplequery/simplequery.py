@@ -57,7 +57,7 @@ class SimpleQueryExecutor:
             handle.set_type('dataset')
             handle.set_name(receiver)
             handle.set_value(results)
-            exec_state = (receiver, results, sql)
+            exec_state = (receiver, handle, sql)
             self.exec_states.append(exec_state)
             return True
         return False
