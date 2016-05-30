@@ -15,6 +15,7 @@ def buildin(func):
 @buildin
 def p(handle):
     print('@' * 40)
+    print(handle)
     if handle.get_type() == 'dataset':
         datesets = handle.get_value()
         for dataset in datesets:
@@ -38,6 +39,7 @@ def fwrite(handle, content):
     f = handle.get_value()
     if f is not None:
         f.write(content)
+
 
 
 @buildin
@@ -66,7 +68,7 @@ class Funcs:
     @staticmethod
     def call(func):
         func_name = func.func_name
-        print("!!!", func_name)
+        # print("exec func => ", func_name)
         buildin_func = buildin_funcs[func_name]
         return buildin_func(*func.args)
 

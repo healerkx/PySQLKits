@@ -3,7 +3,7 @@ import os
 import sys
 import MySQLdb
 sys.path.append('D:\\Projects\\PySQLKits\\lib\\simplequery')
-
+from table_data import *
 from simplequery import *
 
 code = """
@@ -26,6 +26,7 @@ def get_mysql_connection():
         
         print(list(map(lambda x: x[0], c.fetchall())))
     return conn
+
 
 """
 """
