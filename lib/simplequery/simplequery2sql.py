@@ -60,6 +60,9 @@ class SimpleQueryTranslator:
         elif isinstance(p, int) or isinstance(p, float):
             return "%s" % p
 
+    """
+    get a symbol value with pattern 'a.b'
+    """
     def get_field_value(self, var, field):
         handle = self.get_val_value(var)
         if handle.get_type() != 'dataset':
@@ -75,8 +78,8 @@ class SimpleQueryTranslator:
         for exec_state in self.exec_states:
             if var == exec_state[0]:
                 handle = exec_state[1]
-                
                 break
+
         return handle     
 
     def get_symbol_value(self, sym_str):
@@ -123,6 +126,9 @@ class SimpleQueryTranslator:
             a = sym_to_str(rvalue)
             value = self.get_symbol_value(a)
 
+            if len(value) == 0:
+                return None
+
             value_list = ",".join(map(lambda x: "%s" % x, value))
             equals = "%s in (%s)" % (lvalue, value_list)
             return equals
@@ -135,7 +141,9 @@ class SimpleQueryTranslator:
         for param in param_list:
             body = param[1]
             if body[0] == 'assign' and not body[1].startswith('@'):
-                conditions.append(self.get_select_condition(body))
+                condition = self.get_select_condition(body)
+                if condition:
+                    conditions.append(condition)
         return ' AND '.join(conditions)
 
     def parse_arg(self, body):
@@ -173,7 +181,9 @@ class SimpleQueryTranslator:
 
             conditions = self.get_select_conditions(param_list)
 
-            sql = "select * from %s where %s" % (table_name, conditions)
+            sql = "select * from %s" % table_name
+            if len(conditions.strip()) > 0:
+                sql += ' where %s' % conditions
             # print(sql)
             return sql
         return None

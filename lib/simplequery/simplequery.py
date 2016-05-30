@@ -82,19 +82,24 @@ class SimpleQueryExecutor:
         elif t.is_buildin_call(statement):
             t.set_exec_states(self.exec_states)
             func = t.simple_query_to_call(statement)
-            print("@@@@", func)
+            # call func and get return value
             handle = self.__exec(receiver, func)
             exec_state = (receiver, handle)
             self.exec_states.append(exec_state)
             
 
-    def run(self, code):
+    def run_code(self, code):
         s = SimpleQueryStatements()
         statements = s.parse(code)
-        print('Starts to Run')
+
         for statement in statements:
             # print(statement)
             self.__run_statement(statement)
-            print('-------- A statement. --------')
-            print('-------- A statement. --------')
+            print('=' * 40)
+            print()
+
+    def run_file(self, filename):
+        with open(filename, 'r', encoding='UTF-8') as f:
+            lines = f.readlines()
+            self.run_code(''.join(lines))
 

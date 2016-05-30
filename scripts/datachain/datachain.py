@@ -36,6 +36,6 @@ if __name__ == '__main__':
     #print(conn)
     #exit()
     e.set_connection(conn)
-    e.run(code)
+    e.run_file(sys.argv[1])
 
 
