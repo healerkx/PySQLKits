@@ -1,10 +1,13 @@
 
-h = @fopen('d:\\a.html');
-@fwrite(h, '<div>World</div>');
+h = @fopen('d:\\log.html');
+@fwrite(h, '<div><h2>OK</h2></div>');
 @fclose(h);
-@render(h);
 
-com = kx_company(create_time=@today, @limit=5, @asc=company_id);
-@t(h, com);
+
+com = kx_company(company_name='IBM', @limit=5, @asc=company_id);
+
 @p(com);
 user = kx_user(company_id=com.company_id);
+f = @fopen('d:\\a.html');
+@t(f, com, user);
+@render(f);
