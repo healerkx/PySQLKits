@@ -8,7 +8,7 @@ import json
 
 class ExampleRedisHandler(RedisHandler):
     def __init__(self):
-        self.client = redis.Redis(host='127.0.0.1', port=6379, db=0)
+        self.client = self.get_redis()
         self.concern_tables = []
         # user add table define here
         self.table_define = {
@@ -33,7 +33,6 @@ class ExampleRedisHandler(RedisHandler):
 
 
 
-
 """
 Test main
 """
@@ -43,4 +42,4 @@ if __name__ == '__main__':
     br = MySQLRowData(handler, 'f:\\MySQL\\log\\data.000001')
 
     # set a concern event list
-    br.read_loop()
+    br.read_loop(True)
