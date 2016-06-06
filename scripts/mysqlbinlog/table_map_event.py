@@ -29,6 +29,6 @@ def parse_table_map(col_types, metadata, nullable_bits):
 
         handler, metadata = get_descriptor(col_type, metadata, nullable)
         handlers.append(handler)
-        print("MAX-Len", handler.get_max_len())
+        # print("MAX-Len", handler.get_max_len())
     return handlers
 

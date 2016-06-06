@@ -84,7 +84,7 @@ class datetime_descriptor(base_descriptor):
     def __init__(self, metadata):
         self.metadata_len = 1
         self.ms_precision = metadata[0]
-        print("TIME MS PRECISION=", self.ms_precision)
+        # print("TIME MS PRECISION=", self.ms_precision)
 
     # Ref: https://github.com/dropbox/godropbox/blob/master/database/binlog/temporal_fields.go
     def parse(self, data):
