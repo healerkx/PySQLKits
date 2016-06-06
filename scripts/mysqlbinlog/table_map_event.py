@@ -20,7 +20,7 @@ def parse_table_map(col_types, metadata, nullable_bits):
     handlers = []
     for col_type in col_types:
         nullable = nullable_list[i]
-        print(i, col_type, FieldType.to_name(col_type))
+        # print(i, col_type, FieldType.to_name(col_type))
         # Notice, NOT VARCHAR=15
         if col_type == FieldType.VAR_STRING or col_type == FieldType.STRING:
             parse_type_length(metadata)

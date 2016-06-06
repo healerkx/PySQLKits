@@ -258,7 +258,8 @@ class BinlogReader:
     
 
     """
-    insert, update, delete
+    insert, update, delete events
+    :return: (data1, data2) return the data
     """
     def read_rows_event(self, header, update=False):
         post_header_len = 8
@@ -269,7 +270,8 @@ class BinlogReader:
         if flags & 0x1 != 0:
             pass    # end of statement
 
-        print("table_id=%d" % table_id)    # TODO: check the table_id
+        # print("table_id=%d" % table_id)
+        # TODO: check the table_id
         extra_data_len = 0
         if True: # MySQL 5.6
             extra_data_len = 2
@@ -298,15 +300,14 @@ class BinlogReader:
         if update:
             remain = data[bmp1_size + bmp2_size:]
 
-        items, remain = self.read_row_values(col_count, remain)
+        items1, remain = self.read_row_values(col_count, remain)
         items2 = None
         if update:
             items2, _ = self.read_row_values(col_count, remain)
 
-        # chucksum
+        # chucksum ? TODO:
         chucksum = self.read_bytes(4)
-
-        return (items, items2)
+        return (items1, items2)
 
     """
     insert values
@@ -372,7 +373,7 @@ class BinlogReader:
     """
     File event loop
     """
-    def read_all_events(self, forever=False):
+    def read_all_events(self, forever=False, print_header=False):
         default_handler = eh.get_handler(EventType.UNKNOWN_EVENT)
         while True:
             header = self.read_event_header()
@@ -388,7 +389,8 @@ class BinlogReader:
                 default_handler(self, header)
                 continue
 
-            print(header)
+            if print_header:
+                print(header)
             handler = eh.get_handler(header.type_code)
             results = handler(self, header)
             yield (header.type_code, results)
