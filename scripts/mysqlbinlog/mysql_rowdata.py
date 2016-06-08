@@ -10,16 +10,16 @@ class MySQLRowDataHandler:
     def __init__(self):
         pass
 
-    def insert_data(self, data):
+    def insert_data(self, data, header):
         pass
 
-    def update_data(self, data):
+    def update_data(self, data, header):
         pass
 
-    def delete_data(self, data):
+    def delete_data(self, data, header):
         pass
 
-    def set_current_table(self, data):
+    def set_current_table(self, data, header):
         if self.reader is None:
             print('Binlog Reader can NOT be None')
             exit()
@@ -58,12 +58,13 @@ class MySQLRowData:
         for result in self.reader.read_all_events(forever):
             event = result[0]
             data = result[1]
+            header = result[2]
             if event == EventType.WRITE_ROWS_EVENT2:
-                handler.insert_data(data)
+                handler.insert_data(data, header)
             elif event == EventType.UPDATE_ROWS_EVENT2:
-                handler.update_data(data)
+                handler.update_data(data, header)
             elif event == EventType.DELETE_ROWS_EVENT2:
-                handler.delete_data(data)
+                handler.delete_data(data, header)
             elif event == EventType.TABLE_MAP_EVENT:
-                handler.set_current_table(data)
+                handler.set_current_table(data, header)
 

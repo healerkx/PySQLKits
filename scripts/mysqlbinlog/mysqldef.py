@@ -114,6 +114,9 @@ class EventHeader:
         return "[%s] %d %d %d %d" % (from_unixtime(self.timestamp), 
             self.type_code, self.server_id, self.event_len, self.next_pos)
 
+    def time(self):
+        return "%s" % from_unixtime(self.timestamp)
+
 
 class FieldType:
     UNKNOWN =       -1

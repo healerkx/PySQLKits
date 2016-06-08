@@ -1,6 +1,11 @@
 
+import os
 import sys
-sys.path.append('D:\\Projects\\PySQLKits\\scripts\\mysqlbinlog')
+from os.path import dirname
+
+root_path = dirname(dirname(os.getcwd()))
+require_path = os.path.join(root_path, 'scripts\\mysqlbinlog')
+sys.path.append(require_path)
 
 from sync_to_redis import *
 import json

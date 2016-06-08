@@ -393,7 +393,7 @@ class BinlogReader:
                 print(header)
             handler = eh.get_handler(header.type_code)
             results = handler(self, header)
-            yield (header.type_code, results)
+            yield (header.type_code, results, header)
 
 
 
