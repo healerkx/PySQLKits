@@ -81,7 +81,7 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
 
     # 
-    binlog_filename = os.path.join('D:\\Projects\\PySQLKits\\scripts\\mysqlbinlog', 'logs\\traceback\\data.000001')
+    binlog_filename = os.path.join(root_path, 'scripts\\mysqlbinlog\\logs\\traceback\\data.000001')
     handler = TracebackHandler(options.table_name, options.field, options.value)
     br = MySQLRowData(handler, binlog_filename)
 

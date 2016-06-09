@@ -14,27 +14,41 @@ import json
 class ExampleRedisHandler(RedisHandler):
     def __init__(self):
         self.client = self.get_redis()
-        self.concern_tables = []
+        self.concern_tables = ['kx_user', 'kx_order']
         # user add table define here
-        self.table_define = {
-            'kx_user': ['user_id', 'user_name', 'company_id', 'user_mobile', 'user_age', 'user_avatar', 'user_resume', 'province', 'city', 'county', 'status', 'create_time', 'update_time']
-        }
+        self.load_fields_map('root', 'root', 'test')
 
-    def insert_data(self, data):
-        item = data[0]
-        json = self.get_json(item)
-        self.client.hset("user", item[0], json)
+        # if you want add fields info not from load_fields_map
+        # self.append_fields_info('kx_user', [])
+        
 
-    def update_data(self, data):
-        print("update", data)
-        item = data[1]
-        json = self.get_json(item)
-        self.client.hset("user", item[0], json)
+    def insert_data(self, data, header):
+        if self.current_table_name == 'kx_user':
+            item = data[0]
+            json = self.get_json(item, [])
+            self.client.hset("user", item[0], json)
+        elif self.current_table_name == 'kx_order':
+            item = data[0]
+            json = self.get_json(item, [])
+            self.client.hset("order", item[0], json)
 
-    def delete_data(self, data):
-        item = data[0]
-        self.client.hdel("user", item[0])
+    def update_data(self, data, header):
+        if self.current_table_name == 'kx_user':
+            item = data[1]
+            json = self.get_json(item)
+            self.client.hset("user", item[0], json)
+        elif self.current_table_name == 'kx_order':
+            item = data[1]
+            json = self.get_json(item)
+            self.client.hset("order", item[0], json)
 
+    def delete_data(self, data, header):
+        if self.current_table_name == 'kx_user':
+            item = data[0]
+            self.client.hdel("user", item[0])
+        elif self.current_table_name == 'kx_order':
+            item = data[0]
+            self.client.hdel("order", item[0])
 
 
 
@@ -44,7 +58,9 @@ Test main
 if __name__ == '__main__':
 
     handler = ExampleRedisHandler()
-    br = MySQLRowData(handler, 'f:\\MySQL\\log\\data.000001')
+    binlog_filename = os.path.join(root_path, 'scripts\\mysqlbinlog\\logs\\redis\\data.000001')
+    if os.path.exists(binlog_filename):
+        br = MySQLRowData(handler, binlog_filename)
 
-    # set a concern event list
-    br.read_loop(True)
+        # set a concern event list
+        br.read_loop(False)

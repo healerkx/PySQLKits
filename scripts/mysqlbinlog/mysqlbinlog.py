@@ -386,11 +386,13 @@ class BinlogReader:
 
             if not self.is_concern_event(header.type_code) or self.skip_next:
                 # Skip this event
+                self.skip_next = False
                 default_handler(self, header)
                 continue
 
             if print_header:
                 print(header)
+
             handler = eh.get_handler(header.type_code)
             results = handler(self, header)
             yield (header.type_code, results, header)
@@ -403,7 +405,7 @@ Test main
 """
 if __name__ == '__main__':
 
-    br = BinlogReader('f:\\MySQL\\log\\data.000001')
+    br = BinlogReader('D:\\Projects\\PySQLKits\\scripts\\mysqlbinlog\\logs\\redis\\data.000001')
 
     # set a concern event list
     # br.set_concern_events([EventType.TABLE_MAP_EVENT])
