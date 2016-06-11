@@ -11,6 +11,12 @@ from sync_to_redis import *
 import json
 
 
+# TODO: Loading HOT data only, not from data.000001, too much time to load
+
+
+"""
+Example for flush data into Redis from reading MySQL binlog files.
+"""
 class ExampleRedisHandler(RedisHandler):
     def __init__(self):
         self.client = self.get_redis()
@@ -21,7 +27,9 @@ class ExampleRedisHandler(RedisHandler):
         # if you want add fields info not from load_fields_map
         # self.append_fields_info('kx_user', [])
         
-
+    """
+    Business coding here
+    """
     def insert_data(self, data, header):
         if self.current_table_name == 'kx_user':
             item = data[0]

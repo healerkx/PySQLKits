@@ -1,25 +1,27 @@
 
 from mysqlbinlog import *
+from abc import ABCMeta, abstractmethod
 
 
 class MySQLRowDataHandler:
     current_table_name = None
     reader = None
 
-    def __init__(self):
-        pass
-
+    @abstractmethod
     def insert_data(self, data, header):
         pass
 
+    @abstractmethod
     def update_data(self, data, header):
         pass
 
+    @abstractmethod
     def delete_data(self, data, header):
         pass
 
 
-
+"""
+"""
 class MySQLRowData:
     def __init__(self, handler, filename):
         self.handler = handler

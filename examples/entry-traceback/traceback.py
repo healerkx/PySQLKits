@@ -69,13 +69,13 @@ if __name__ == '__main__':
     """
     If can NOT connect MySQL service, neither nor fetch CREATE TABLE info
     parser.add_option("-f", "--field", action="store",
-                  dest="field", help="Provide field name")
+                      dest="field", help="Provide field name")
     """
     parser.add_option("-i", "--field-index", action="store",
-                  dest="field", help="Provide field name")
+                      dest="field", help="Provide field name")
 
     parser.add_option("-v", "--value", action="store",
-                  dest="value", help="Provide the value")
+                      dest="value", help="Provide the value")
 
     sys.argv = ['_.py', '--table=kx_order', '--field-index=0', '--value=2']
     options, args = parser.parse_args()
