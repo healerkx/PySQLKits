@@ -1,10 +1,14 @@
 <html>
+<head>
+    <link href="http://cdn.bootcss.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="http://cdn.bootcss.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+</head>
 <body>
-<div>
+<div style="padding:5px">
 
     {% for dataset in datasets %}
         <!-- -->
-        <table cellpadding="3" cellspacing="1" border='1'>
+        <table class='table table-bordered table-hover table-condensed table-striped'>
             <thead>
                 <tr>
                     {% for cell in dataset[0] %}

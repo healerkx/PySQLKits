@@ -98,7 +98,7 @@ class SimpleQueryExecutor:
             print('=' * 40)
             print()
 
-    def run_file(self, filename):
+    def run_file(self, filename, params=None):
         with open(filename, 'r', encoding='UTF-8') as f:
             lines = f.readlines()
             self.run_code(''.join(lines))

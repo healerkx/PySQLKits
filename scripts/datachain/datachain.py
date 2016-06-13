@@ -6,16 +6,6 @@ sys.path.append('D:\\Projects\\PySQLKits\\lib\\simplequery')
 from table_data import *
 from simplequery import *
 
-code = """
-h = @fopen('d:\\a.html');
-@fwrite(h, '<div>World</div>');
-@fclose(h);
-@render(h);
-
-com = kx_company(create_time=@today, @limit=5, @asc=company_id);
-@p(com);
-user = kx_user(company_id=com.company_id);
-"""
 
 def get_mysql_connection():
     args = {'host':'localhost', 'user':'root', 'passwd':'root', 'db':"test"}
@@ -37,6 +27,11 @@ if __name__ == '__main__':
     #print(conn)
     #exit()
     e.set_connection(conn)
-    e.run_file(sys.argv[1])
+    filename = sys.argv[1]
+    params = None
+    if len(sys.argv) > 2:
+        params = sys.argv[2]
+    if os.path.exists(filename):
+        e.run_file(filename, params)
 
 
