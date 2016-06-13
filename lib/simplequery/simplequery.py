@@ -67,6 +67,16 @@ class SimpleQueryExecutor:
         result = Funcs.call(func)
         return result
 
+    def __add_params(self, *params):
+        receiver = 'argv'
+        handle = Handle()
+        handle.set_type('array')
+        handle.set_name(receiver)
+        handle.set_value(*params)
+        exec_state = (receiver, handle, None)
+        self.exec_states.append(exec_state)
+        
+
     def __run_statement(self, statement):
         print(statement)
         receiver = statement[1]
@@ -88,9 +98,10 @@ class SimpleQueryExecutor:
             self.exec_states.append(exec_state)
             
 
-    def run_code(self, code):
+    def run_code(self, code, params):
         s = SimpleQueryStatements()
         statements = s.parse(code)
+        self.__add_params(params)
 
         for statement in statements:
             # print(statement)
@@ -101,5 +112,5 @@ class SimpleQueryExecutor:
     def run_file(self, filename, params=None):
         with open(filename, 'r', encoding='UTF-8') as f:
             lines = f.readlines()
-            self.run_code(''.join(lines))
+            self.run_code(''.join(lines), [2])
 

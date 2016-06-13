@@ -10,6 +10,8 @@ tokens = (
     'DOT',
     'LPAREN',
     'RPAREN',
+    'LBRACKET',
+    'RBRACKET',
     'EQU',
 
 )
@@ -19,6 +21,8 @@ t_SEMI      = ';'
 t_DOT       = '\.'
 t_LPAREN    = '\('
 t_RPAREN    = '\)'
+t_LBRACKET  = '\['
+t_RBRACKET  = '\]'
 t_EQU       = '='
 
 reserved = {
@@ -80,6 +84,7 @@ def p_error(p):
 
 def p_rvalue(p):
     """rvalue       : symbol
+                    | arrval
                     | INT
                     | FLOAT
                     | STR"""
@@ -91,8 +96,15 @@ def p_symbol(p):
     yacc_print('symbol', p)
     if len(p) == 2:
         p[0] = ('sym', p[1])
-    else:
+    elif len(p) == 4:
         p[0] = ('sym', p[1], p[3])
+
+def p_arrval(p):
+    """arrval       : symbol LBRACKET INT RBRACKET"""
+    yacc_print('arrval', p)
+    if len(p) == 5:
+        p[0] = ('arrval', p[1], p[3])
+
 
 def p_assign(p):
     """assign       : NAME EQU rvalue"""

@@ -67,6 +67,7 @@ class SimpleQueryTranslator:
         handle = self.get_val_value(var)
         if handle.get_type() != 'dataset':
             return []
+
         dataset_list = handle.get_value()
         values = []
         for dataset in dataset_list:
@@ -75,6 +76,7 @@ class SimpleQueryTranslator:
 
     def get_val_value(self, var):
         handle = None
+        
         for exec_state in self.exec_states:
             if var == exec_state[0]:
                 handle = exec_state[1]
@@ -90,6 +92,16 @@ class SimpleQueryTranslator:
             return values
         else:
             return self.get_val_value(var)
+
+    def get_array_value(self, array):
+        sym = array[1]
+        index = array[2]
+        sym_str = sym_to_str(sym)
+        arr_handle = self.get_symbol_value(sym_str)
+        array = arr_handle.get_value()
+        val = array[index]
+        
+        return val 
 
 
     def can_convert_to_sql(self, statement):
@@ -132,6 +144,9 @@ class SimpleQueryTranslator:
             value_list = ",".join(map(lambda x: "%s" % x, value))
             equals = "%s in (%s)" % (lvalue, value_list)
             return equals
+        elif rvalue[0] == 'arrval':
+            val = self.get_array_value(rvalue)
+            return "%s = %s" % (lvalue, val)
 
     def get_select_orderby_limit(self, assign):
         return ""
@@ -158,9 +173,11 @@ class SimpleQueryTranslator:
                 if param_type == 'assign' and not body[1].startswith('@'):
                     args.append(body)
                 elif param_type == 'sym':
-
                     sym_str = sym_to_str(body)
                     value = self.get_symbol_value(sym_str)
+                    args.append(value)
+                elif param_type == 'arrval':
+                    value = self.get_array_value(body)
                     args.append(value)
             elif isinstance(body, int):
                 args.append(body)
