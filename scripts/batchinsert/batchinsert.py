@@ -1,51 +1,113 @@
-
 # 
 import random
+from dateutil import parser as DateParse
+import time
 
-class Unique:
-    def __init__(self, **flags):
-        pass
-        
+def unixtime(datestr):
+    return int(DateParse.parse(datestr).timestamp())
 
+# base class
 class ValueGenerator:
     def __init__(self, **flags):
-        pass
+        self.flags = flags
+        if hasattr(self, 'initialize'):
+            self.initialize()
 
-
+##########################################
+# Generators
 class ListGenerator(ValueGenerator):
-    def __init__(self, v):
+    def adapt(self, v):
         self.v = v
 
     def __next__(self):
         return random.choice(self.v)
 
-class RangeGenerator(ValueGenerator):
-    def __init__(self, v):
-        self.v = v        
+
+class DatetimeRange(ValueGenerator):
+    def initialize(self):
+        if 'begin' in self.flags:
+            self.begin = unixtime(self.flags['begin'])
+        if 'end' in self.flags:
+            self.end = unixtime(self.flags['end'])
 
     def __next__(self):
-        return random.choice(self.v)
+        self.values = range(self.begin, self.end)
+        ts = random.choice(self.values)
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)) 
+
+class IntegerRange(ValueGenerator):
+    values = None
+    current = None
+    step = 1
+    def adapt(self, values):
+        self.values = values
+
+    def initialize(self):
+        if 'begin' in self.flags:
+            self.current = self.flags['begin']
+        if 'step' in self.flags:
+            self.step = self.flags['step']
+
+    def __next__(self):
+        if self.values is None:
+            self.values = range(self.flags['begin'], self.flags['end'])
+        if 'order' in self.flags:
+            if self.flags['order'] == 'asc':
+                self.current += self.step
+                return self.current
+            elif self.flags['order'] == 'desc':
+                self.current -= self.step
+                return self.current
+
+        return random.choice(self.values)        
 
 """
 """
 class EnglishName(ValueGenerator):
-    def __init__(self):
+    names = None
+    def initialize(self):
         self.names = self.load('english_names.txt')
 
     def load(self, filename):
         # TODO: load names from a file
-        return ['Mike', 'Lucy', 'Lily', 'Sophy', 'Chris', 'John']
+        return ['Albert', 'Bob', 'Helen', 'McDonald', 'Mike', 'Lucy', 'Lily', 'Sophy', 'Chris', 'John']
 
     def __next__(self):
-        name = random.choice(self.names)
-        return name
+        if self.names is None:
+            self.initialize()
+        try:
+            name = random.choice(self.names)
+            if self.flags['unique']:
+                self.names.remove(name)
+            return name            
+        except:
+            # Resource not enough for unique random
+            return "<None>"
+
 
 """
 """
 class ChineseName(ValueGenerator):
+    names = None
+
+    def initialize(self):
+        self.names = self.__load('chinese_names.txt')
+
+    def __load(self, filename):
+        with open(filename, 'r', encoding='utf-8') as file:
+            return list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), file.readlines())))
 
     def __next__(self):
-        pass
+        if self.names is None:
+            self.initialize()
+        try:
+            name = random.choice(self.names)
+            if self.unique:
+                self.names.remove(name)
+            return name            
+        except:
+            # Resource not enough for unique random
+            return "<None>"
 
 
 class ChinaMobile(ValueGenerator):
@@ -109,19 +171,32 @@ class Insert:
         if isinstance(config, ValueGenerator):
             return config
         elif isinstance(config, list):
-            return ListGenerator(config)
+            r = ListGenerator()
+            r.adapt(config)
+            return r
         elif isinstance(config, range):
-            return RangeGenerator(config)
+            r =  IntegerRange()
+            r.adapt(config)
+            return r
         return None
 
 
 
 """
 """
-if __name__ == '__main__': 
-    i = Insert('kx_user', company_id=[2, 3], username=EnglishName(), age=range(20, 90), mobile=ChinaMobile(Unique=True))
-    i.set_fields_order(['username', 'age', 'mobile', 'company_id', ])
-    i.perform(None, 3)
+if __name__ == '__main__':
+
+
+    i = Insert('kx_user', 
+        company_id=[2, 3, 5], 
+        username=EnglishName(unique=True), 
+        age=range(20, 90), 
+        mobile=ChinaMobile(),
+        time=DatetimeRange(begin='2015-12-23', end='2016-12-23'),
+        order_id=IntegerRange(begin=100, end=1000, step=2, order='asc'))
+
+    i.set_fields_order(['username', 'age', 'mobile', 'company_id', 'time', 'order_id'])
+    i.perform(None, 20)
 
 
 
