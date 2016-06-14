@@ -89,9 +89,9 @@ class SimpleQueryExecutor:
 
             if self.__exec_query(receiver, sql):
                 self.__dump_exec_states()
-        elif t.is_buildin_call(statement):
+        elif t.is_buildin_func(statement):
             t.set_exec_states(self.exec_states)
-            func = t.simple_query_to_call(statement)
+            func = t.get_func_obj(statement)
             # call func and get return value
             handle = self.__exec(receiver, func)
             exec_state = (receiver, handle)
@@ -112,5 +112,5 @@ class SimpleQueryExecutor:
     def run_file(self, filename, params=None):
         with open(filename, 'r', encoding='UTF-8') as f:
             lines = f.readlines()
-            self.run_code(''.join(lines), [2])
+            self.run_code(''.join(lines), params)
 

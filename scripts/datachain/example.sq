@@ -4,7 +4,7 @@ h = @fopen('d:\\log.html');
 @fclose(h);
 
 
-com = kx_company(company_id=argv[0], @limit=5, @asc=company_id);
+com = kx_company(company_type=argv[0], status=argv[1], @limit=5, @asc=company_id);
 
 @p(com);
 user = kx_user(company_id=com.company_id);

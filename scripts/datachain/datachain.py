@@ -30,7 +30,7 @@ if __name__ == '__main__':
     filename = sys.argv[1]
     params = None
     if len(sys.argv) > 2:
-        params = sys.argv[2]
+        params = sys.argv[2:]
     if os.path.exists(filename):
         e.run_file(filename, params)
 

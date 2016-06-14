@@ -74,16 +74,14 @@ class SimpleQueryTranslator:
             values.append(dataset[field])
         return values
 
+    # Get variable value as a Handle
     def get_val_value(self, var):
-        handle = None
-        
         for exec_state in self.exec_states:
             if var == exec_state[0]:
-                handle = exec_state[1]
-                break
-
-        return handle     
-
+                return exec_state[1]
+        raise Exception('Undefined symbol')
+  
+    # get symbol value from str, a.b or a
     def get_symbol_value(self, sym_str):
         var = sym_str
         if '.' in sym_str:
@@ -93,15 +91,18 @@ class SimpleQueryTranslator:
         else:
             return self.get_val_value(var)
 
-    def get_array_value(self, array):
-        sym = array[1]
-        index = array[2]
+    # Get symbol[index] value
+    def get_array_value(self, array_access):
+        sym = array_access[1]
+        index = array_access[2]
         sym_str = sym_to_str(sym)
         arr_handle = self.get_symbol_value(sym_str)
         array = arr_handle.get_value()
-        val = array[index]
-        
-        return val 
+        if index < len(array):
+            val = array[index]
+            return val 
+        else:
+            raise Exception("Out of array bound")
 
 
     def can_convert_to_sql(self, statement):
@@ -112,7 +113,7 @@ class SimpleQueryTranslator:
                 return True
         return False
 
-    def is_buildin_call(self, statement):
+    def is_buildin_func(self, statement):
         body = statement[2]
         if body[0] == 'func':
             func_name = body[1]
@@ -205,15 +206,12 @@ class SimpleQueryTranslator:
             return sql
         return None
 
-    def simple_query_to_call(self, statement):
-        receiver_name = statement[1]
+    def get_func_obj(self, statement):
         body = statement[2]
-        if body[0] == 'func':
-            func_name = body[1]
-            param_list = body[2]
+        assert(body[0] == 'func')
+        func_name = body[1]
+        param_list = body[2]
+        args = self.get_args(param_list)
 
-            args = self.get_args(param_list)
-
-            return Func(func_name, args)
+        return Func(func_name, args)
             
-        return None        
