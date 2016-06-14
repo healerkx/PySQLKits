@@ -1,8 +1,13 @@
 
 import os
+from os.path import dirname
 import sys
 import MySQLdb
-sys.path.append('D:\\Projects\\PySQLKits\\lib\\simplequery')
+
+root_path = dirname(dirname(os.getcwd()))
+require_path = os.path.join(root_path, 'lib\\simplequery')
+sys.path.append(require_path)
+
 from table_data import *
 from simplequery import *
 
@@ -17,10 +22,16 @@ def get_mysql_connection():
         print(list(map(lambda x: x[0], c.fetchall())))
     return conn
 
+def usage():
+    print('Help:')
 
 """
+Run file with argv[]
 """
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        usage()
+        exit()
 
     e = SimpleQueryExecutor()
     conn = get_mysql_connection()
