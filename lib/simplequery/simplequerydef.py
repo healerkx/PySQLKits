@@ -12,6 +12,7 @@ tokens = (
     'RPAREN',
     'LBRACKET',
     'RBRACKET',
+    'VLINE',
     'EQU',
 
 )
@@ -23,6 +24,7 @@ t_LPAREN    = '\('
 t_RPAREN    = '\)'
 t_LBRACKET  = '\['
 t_RBRACKET  = '\]'
+t_VLINE     = '\|'
 t_EQU       = '='
 
 reserved = {
@@ -83,8 +85,9 @@ def p_error(p):
 
 
 def p_rvalue(p):
-    """rvalue       : symbol
+    """rvalue       : filter
                     | arrval
+                    | symbol
                     | INT
                     | FLOAT
                     | STR"""
@@ -105,6 +108,19 @@ def p_arrval(p):
     if len(p) == 5:
         p[0] = ('arrval', p[1], p[3])
 
+def p_filter(p):
+    """filter       : symbol VLINE sym_list VLINE"""
+    
+    p[0] = ('filter', p[1], p[3])
+
+def p_sym_list(p):
+    """sym_list     : sym_list COMMA symbol
+                    | symbol"""
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1]
+        p[0].append(p[3])   
 
 def p_assign(p):
     """assign       : NAME EQU rvalue"""
@@ -118,6 +134,7 @@ def p_param(p):
 def p_param_list(p):    
     """param_list   : param_list COMMA param
                     | param"""
+    print(p)
     if len(p) == 2:
         p[0] = [p[1]]
     else:

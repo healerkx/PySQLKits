@@ -63,7 +63,6 @@ class SimpleQueryExecutor:
         return False
 
     def __exec(self, receiver, func):
-        print("~", receiver, func)
         result = Funcs.call(func)
         return result
 

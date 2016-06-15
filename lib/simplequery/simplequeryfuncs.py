@@ -1,5 +1,6 @@
 
 from simplequeryhandle import *
+from prettytable import PrettyTable
 import webbrowser
 
 buildin_funcs = dict()
@@ -12,16 +13,27 @@ def buildin(func):
     buildin_funcs[func_name] = func
     return func
 
+def dict_to_list(dataset, filters):
+    return [dataset[f] for f in filters]
+
+
+def print_table(datesets, filters):
+    filter_list = list(map(lambda x: x[1], filters))
+    x = PrettyTable(filter_list)
+    for dataset in datesets:
+        row = dict_to_list(dataset, filter_list)
+        x.add_row(row)
+    print(x)
+
 @buildin
 def p(handle):
-    print('@' * 40)
-    print(handle)
     if handle.get_type() == 'dataset':
         datesets = handle.get_value()
-        for dataset in datesets:
-            print(dataset)
+        filters = handle.get_filters()
+        print_table(datesets, filters)
         return True
     return False
+
 
 @buildin
 def fopen(filename):
@@ -33,13 +45,13 @@ def fopen(filename):
     
     return handle
 
+
 @buildin
 def fwrite(handle, content):
     assert(isinstance(handle, Handle))
     f = handle.get_value()
     if f is not None:
         f.write(content)
-
 
 
 @buildin
@@ -68,8 +80,8 @@ class Funcs:
     @staticmethod
     def call(func):
         func_name = func.func_name
-        # print("exec func => ", func_name)
         buildin_func = buildin_funcs[func_name]
+        print("exec func => ", func.args)
         return buildin_func(*func.args)
 
 """

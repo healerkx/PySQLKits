@@ -60,9 +60,8 @@ class SimpleQueryTranslator:
         elif isinstance(p, int) or isinstance(p, float):
             return "%s" % p
 
-    """
-    get a symbol value with pattern 'a.b'
-    """
+
+    # get a symbol value with pattern 'a.b'
     def get_field_value(self, var, field):
         handle = self.get_val_value(var)
         if handle.get_type() != 'dataset':
@@ -74,7 +73,7 @@ class SimpleQueryTranslator:
             values.append(dataset[field])
         return values
 
-    # Get variable value as a Handle
+    # Get variable value (pattern 'a') as a Handle
     def get_val_value(self, var):
         for exec_state in self.exec_states:
             if var == exec_state[0]:
@@ -104,6 +103,12 @@ class SimpleQueryTranslator:
         else:
             raise Exception("Out of array bound")
 
+    def get_filter_value(self, body):
+        sym = body[1]
+        filters = body[2]
+        handle = self.get_val_value(sym_to_str(sym))
+        handle.set_filters(filters)
+        return handle
 
     def can_convert_to_sql(self, statement):
         body = statement[2]
@@ -179,6 +184,9 @@ class SimpleQueryTranslator:
                     args.append(value)
                 elif param_type == 'arrval':
                     value = self.get_array_value(body)
+                    args.append(value)
+                elif param_type == 'filter':
+                    value = self.get_filter_value(body)
                     args.append(value)
             elif isinstance(body, int):
                 args.append(body)
