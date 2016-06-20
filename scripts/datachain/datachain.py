@@ -12,18 +12,10 @@ from table_data import *
 from simplequery import *
 
 
-def get_mysql_connection():
-    args = {'host':'localhost', 'user':'root', 'passwd':'root', 'db':"test"}
-    conn = MySQLdb.connect(**args)
-
-    with conn.cursor() as c:
-        c.execute('show databases;')
-        
-        print(list(map(lambda x: x[0], c.fetchall())))
-    return conn
-
 def usage():
-    print('Help:')
+    print("""Help:
+    python datachain.py simplequery.sq [argv1]
+        """)
 
 """
 Run file with argv[]
@@ -34,10 +26,7 @@ if __name__ == '__main__':
         exit()
 
     e = SimpleQueryExecutor()
-    conn = get_mysql_connection()
-    #print(conn)
-    #exit()
-    e.set_connection(conn)
+    
     filename = sys.argv[1]
     params = None
     if len(sys.argv) > 2:

@@ -1,4 +1,5 @@
 
+@mysql('localhost', 'root', 'root', 'test');
 
 com = kx_company(company_type=1);
 @p(com|company_id, company_name|);

@@ -1,7 +1,15 @@
 import struct
+import decimal
 from mysqldef import *
 
+
 dh = DescriptorHandler()
+
+def pb(b):
+    print("=" * 40)
+    for i in b:
+        print(i)
+    print("=" * 40)    
 
 
 class base_descriptor:
@@ -68,15 +76,81 @@ class long_descriptor(base_descriptor):
         i, = struct.unpack('=I', c)
         return i, d
 
-@dh.handle(FieldType.DECIMAL)
+@dh.handle(FieldType.NEWDECIMAL)
 class decimal_descriptor(base_descriptor):
     def __init__(self, metadata):
-        self.metadata_len = 0
+        self.metadata_len = 2
+        self.precision = metadata[0]
+        self.decimals =  metadata[1]
+        print(self.precision, self.decimals)
 
-    def parse(self, data):
-        c = data[0:4]
-        d = data[4:]
-        return struct.unpack('=I', c), d
+    """
+    https://github.com/wenerme/myfacility/blob/master/binlog/decimal.go
+    http://python-mysql-replication.readthedocs.io/en/latest/_modules/pymysqlreplication/row_event.html
+    """
+    def parse(self, bytes):
+    #def __read_new_decimal(self, column):
+        """Read MySQL's new decimal format introduced in MySQL 5"""
+
+        # This project was a great source of inspiration for
+        # understanding this storage format.
+        # https://github.com/jeremycole/mysql_binlog
+
+        digits_per_integer = 9
+        compressed_bytes = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4]
+        integral = self.precision - self.decimals
+        uncomp_integral = int(integral / digits_per_integer)
+        uncomp_fractional = int(self.decimals / digits_per_integer)
+        comp_integral = integral - (uncomp_integral * digits_per_integer)
+        comp_fractional = self.decimals - (uncomp_fractional * digits_per_integer)
+
+        data = bytearray(bytes)
+
+        # Support negative
+        # The sign is encoded in the high bit of the the byte
+        # But this bit can also be used in the value
+        value = data[0]
+        if value & 0x80 != 0:
+            res = ""
+            mask = 0
+        else:
+            mask = -1
+            res = "-"
+        
+        byte = struct.pack('<B', value ^ 0x80)
+        data[0] = BigEndian.uint8(byte)
+        
+        size = compressed_bytes[comp_integral]
+
+        if size > 0:
+            i = BigEndian.uint_by_size(data, size)
+            data = data[size:]
+            value = i ^ mask
+            res += str(value)
+
+        for i in range(0, uncomp_integral):
+            b = data[0:4]
+            data = data[4:]
+            value = struct.unpack('>i', b)[0] ^ mask
+            
+            res += '%09d' % value
+
+        res += "."
+
+        for i in range(0, uncomp_fractional):
+            b = data[0:4]
+            data = data[4:]
+            value = struct.unpack('>i', b)[0] ^ mask
+            res += '%09d' % value
+
+        size = compressed_bytes[comp_fractional]
+        if size > 0:
+            i = BigEndian.uint_by_size(data[0:size], size)
+            data = data[size:]
+            value = i ^ mask
+            res += '%0*d' % (comp_fractional, value)
+
+        return decimal.Decimal(res), data
 
 # DATETIME
 @dh.handle(FieldType.DATETIME2)

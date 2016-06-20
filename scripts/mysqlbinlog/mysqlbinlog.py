@@ -192,7 +192,7 @@ class BinlogReader:
         metadata = data[size:size + metadata_size]
         data = data[size + metadata_size:]
         # print(data)
-        # print("---", metadata_size, metadata)
+        print("---", metadata_size, metadata)
         nullable_bits_size = (col_count + 7) // 8
         nullable_bits = data[:nullable_bits_size]
 
@@ -283,9 +283,13 @@ class BinlogReader:
                 rw_extra_info_tag, extra_row_len, extra_data = struct.unpack('=BB%ds' % (extra_data_len - 2), c)
                 assert(rw_extra_info_tag == 0)
         
-
         data_len = header.event_len - BINLOG_EVENT_HEADER_LEN - post_header_len - extra_data_len
+
         data = self.read_bytes(data_len - 4)
+        for i in data:
+            print(i)
+
+        print("-"* 40)
 
         col_count, size = self.read_field_length(data)
         data = data[size:]
@@ -294,7 +298,7 @@ class BinlogReader:
         bmp1_size = int((col_count + 7) / 8)
         bmp2_size = int((col_count + 7) / 8)
         bmp = data[: bmp1_size + bmp2_size]
-        # print(bmp)
+        print(bmp)
         
         remain = data[bmp1_size:]
         if update:
@@ -405,7 +409,7 @@ Test main
 """
 if __name__ == '__main__':
 
-    br = BinlogReader('D:\\Projects\\PySQLKits\\scripts\\mysqlbinlog\\logs\\redis\\data.000001')
+    br = BinlogReader('F:\\MySQL\\log\\data.000001')
 
     # set a concern event list
     # br.set_concern_events([EventType.TABLE_MAP_EVENT])

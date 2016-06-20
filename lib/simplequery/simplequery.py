@@ -7,6 +7,15 @@ from simplequerydef import *
 from simplequery2sql import *
 from simplequeryfuncs import *
 
+def get_mysql_connection(**params):
+    params = {'host':'localhost', 'user':'root', 'passwd':'root', 'db':"test"}
+    conn = MySQLdb.connect(**params)
+
+    with conn.cursor() as c:
+        c.execute('show databases;')
+        print(list(map(lambda x: x[0], c.fetchall())))
+    return conn
+
 class SimpleQueryStatements:
 
     def __init__(self):
@@ -58,9 +67,14 @@ class SimpleQueryExecutor:
             handle.set_name(receiver)
             handle.set_value(results)
             exec_state = (receiver, handle, sql)
-            self.exec_states.append(exec_state)
+            self.__add_exec_state(exec_state)
             return True
         return False
+
+    # append to exec_states and do more work here
+    def __add_exec_state(self, exec_state):
+        self.exec_states.append(exec_state)
+
 
     def __exec(self, receiver, func):
         result = Funcs.call(func)
@@ -73,7 +87,7 @@ class SimpleQueryExecutor:
         handle.set_name(receiver)
         handle.set_value(*params)
         exec_state = (receiver, handle, None)
-        self.exec_states.append(exec_state)
+        self.__add_exec_state(exec_state)
         
 
     def __run_statement(self, statement):
@@ -91,10 +105,15 @@ class SimpleQueryExecutor:
         elif t.is_buildin_func(statement):
             t.set_exec_states(self.exec_states)
             func = t.get_func_obj(statement)
+
             # call func and get return value
             handle = self.__exec(receiver, func)
             exec_state = (receiver, handle)
-            self.exec_states.append(exec_state)
+            self.__add_exec_state(exec_state)
+
+            if func.func_name == "@mysql":
+                print(handle)
+                self.set_connection(handle)
             
 
     def run_code(self, code, params):

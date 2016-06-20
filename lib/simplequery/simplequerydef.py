@@ -63,9 +63,8 @@ def t_INT(t):
     return t
 
 def t_STR(t):
-    r'\'.*\''
+    r'\'([^\'\\\n]|(\\.))*?\''
     t.value = t.value.strip("\"'")
-    #symprint('%' * 40, t)
     return t
 
 def t_newline(t):

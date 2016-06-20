@@ -161,8 +161,16 @@ class FieldType:
 
 
 class BigEndian:
-
-    
+    @staticmethod
+    def uint_by_size(b, size):
+        if size == 1:
+            return BigEndian.uint8(b)
+        elif size == 2:
+            return BigEndian.uint16(b)
+        elif size == 3:
+            return BigEndian.uint24(b)
+        elif size == 4:
+            return BigEndian.uint32(b)        
 
     @staticmethod
     def uint8(b):

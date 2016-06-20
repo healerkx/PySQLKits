@@ -2,6 +2,7 @@
 from simplequeryhandle import *
 from prettytable import PrettyTable
 import webbrowser
+import MySQLdb
 
 buildin_funcs = dict()
 
@@ -27,6 +28,10 @@ def print_table(datesets, filters):
 
 @buildin
 def p(handle):
+    handle_type = type(handle)
+    if handle_type == int or handle_type == str:
+        print(handle)
+        return True
     if handle.get_type() == 'dataset':
         datesets = handle.get_value()
         filters = handle.get_filters()
@@ -64,6 +69,13 @@ def fclose(handle):
 
 
 @buildin
+def mysql(host, username, passwd, database):
+    params = {'host':host, 'user':username, 'passwd':passwd, 'db':database}
+    conn = MySQLdb.connect(**params)
+    
+    return conn
+
+@buildin
 def render(handle):
     assert(isinstance(handle, Handle))
     if handle.get_type() == 'file':
@@ -81,7 +93,7 @@ class Funcs:
     def call(func):
         func_name = func.func_name
         buildin_func = buildin_funcs[func_name]
-        print("exec func => ", func.args)
+        print("exec func => ", *func.args)
         return buildin_func(*func.args)
 
 """
