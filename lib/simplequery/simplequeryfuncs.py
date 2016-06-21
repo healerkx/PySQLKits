@@ -18,8 +18,7 @@ def dict_to_list(dataset, filters):
     return [dataset[f] for f in filters]
 
 
-def print_table(datesets, filters):
-    filter_list = list(map(lambda x: x[1], filters))
+def print_table(datesets, filter_list):
     x = PrettyTable(filter_list)
     for dataset in datesets:
         row = dict_to_list(dataset, filter_list)
@@ -35,7 +34,11 @@ def p(handle):
     if handle.get_type() == 'dataset':
         datesets = handle.get_value()
         filters = handle.get_filters()
-        print_table(datesets, filters)
+        if filters is not None:
+            filter_list = list(map(lambda x: x[1], filters))
+        else:
+            filter_list = handle.get_default_fields()
+        print_table(datesets, filter_list)
         return True
     return False
 
@@ -70,7 +73,7 @@ def fclose(handle):
 
 @buildin
 def mysql(host, username, passwd, database):
-    params = {'host':host, 'user':username, 'passwd':passwd, 'db':database}
+    params = {'host': host, 'user': username, 'passwd': passwd, 'db': database, 'charset': "utf8"}
     conn = MySQLdb.connect(**params)
     
     return conn

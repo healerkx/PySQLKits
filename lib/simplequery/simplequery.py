@@ -57,7 +57,7 @@ class SimpleQueryExecutor:
         for exec_state in self.exec_states:
             print(exec_state) 
 
-    def __exec_query(self, receiver, sql):
+    def __exec_query(self, receiver, sql, table_name):
         with self.conn.cursor(MySQLdb.cursors.DictCursor) as cursor:
             r = cursor.execute(sql)
 
@@ -66,6 +66,13 @@ class SimpleQueryExecutor:
             handle.set_type('dataset')
             handle.set_name(receiver)
             handle.set_value(results)
+
+            # set fields for order
+            rows = cursor.execute('SHOW COLUMNS FROM %s' % table_name)
+            columns = cursor.fetchall()
+            fields = list(map(lambda x: x['Field'], columns))
+            handle.set_default_fields(fields)
+            
             exec_state = (receiver, handle, sql)
             self.__add_exec_state(exec_state)
             return True
@@ -96,11 +103,12 @@ class SimpleQueryExecutor:
         t = SimpleQueryTranslator()
         if t.can_convert_to_sql(statement):
             t.set_exec_states(self.exec_states)
+
             sql = t.simple_query_to_sql(statement)
             if self.conn is None:
                 assert(False)
-
-            if self.__exec_query(receiver, sql):
+            table_name = statement[2][1]
+            if self.__exec_query(receiver, sql, table_name):
                 self.__dump_exec_states()
         elif t.is_buildin_func(statement):
             t.set_exec_states(self.exec_states)

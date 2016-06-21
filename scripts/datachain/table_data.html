@@ -11,16 +11,16 @@
         <table class='table table-bordered table-hover table-condensed table-striped'>
             <thead>
                 <tr>
-                    {% for cell in dataset[0] %}
+                    {% for cell in dataset['fields'] %}
                     <td>{{cell}}</td>
                     {% end %}
                 </tr>
             </thead>
             <tbody>
-            {% for data in dataset %}
+            {% for data in dataset['data'] %}
                 <tr>
                 {% for cell in data %}
-                    <td>{{data[cell]}}</td>
+                    <td>{{cell}}</td>
                 {% end %}
                 </tr>
             {% end %}
