@@ -5,6 +5,6 @@
 com = kx_company(company_type=1);
 @p(com);
 f = @fopen('a.html');
-@t(f, com);
+@t(f, com|company_name, company_type|);
 
 @render(f);

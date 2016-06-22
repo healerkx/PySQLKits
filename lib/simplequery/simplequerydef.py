@@ -1,6 +1,7 @@
 
 # Lex
 tokens = (
+    'BUILDIN',
     'NAME',
     'FLOAT',
     'INT',
@@ -46,11 +47,19 @@ def yacc_print(*p):
     print('Yacc:', p)
 
 
+def t_BUILDIN(t):
+    r'@[_A-Za-z0-9]*'
+    t.type = reserved.get(t.value, 'BUILDIN')    # Check for reserved words
+    lex_print(t)
+    return t
+
 def t_NAME(t):
-    r'[A-Za-z_@][_A-Za-z0-9]*'
+    r'[A-Za-z_][_A-Za-z0-9]*'
     t.type = reserved.get(t.value, 'NAME')    # Check for reserved words
     lex_print(t)
-    return t   
+    return t
+
+
 
 def t_FLOAT(t):
     r'\d+(\.\d+)'
@@ -124,6 +133,7 @@ def p_sym_list(p):
 def p_assign(p):
     """assign       : NAME EQU rvalue"""
     p[0] = ('assign', p[1], p[3])
+    print(p[1], p[3])
 
 def p_param(p):
     """param        : assign
@@ -133,12 +143,12 @@ def p_param(p):
 def p_param_list(p):    
     """param_list   : param_list COMMA param
                     | param"""
-    print(p)
     if len(p) == 2:
         p[0] = [p[1]]
     else:
         p[0] = p[1]
         p[0].append(p[3])
+
 
 def p_params(p):
     """params       : LPAREN param_list RPAREN
@@ -147,11 +157,18 @@ def p_params(p):
         p[0] = p[2]
     else:
         p[0] = []
+    print(p[0])
 
 def p_func(p):
-    """func         :   NAME params"""
-    p[0] = ('func', p[1], p[2])
+    """func         :   BUILDIN params"""
 
+    p[0] = ('func', p[1], p[2])
+    print(p[0])
+
+def p_query(p):
+    """query        :   NAME params"""
+    p[0] = ('query', p[1], p[2])
+    print(p[0])    
 
 
 
@@ -160,7 +177,9 @@ Statement
 """
 def p_statememt(p):
     """statement    :   NAME EQU func SEMI
-                    |   func SEMI"""
+                    |   NAME EQU query SEMI
+                    |   func SEMI
+                    |   query SEMI"""
     if len(p) > 3:
         yacc_print("statement", p[1], p[3])
         p[0] = ("statement", p[1], p[3])

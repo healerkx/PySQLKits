@@ -126,7 +126,9 @@ class ChinaMobile(ValueGenerator):
             v = next(self)
             yield v
 
-
+"""
+main class for insertion
+"""
 class Insert:
     table_name = None
     options = None
@@ -137,8 +139,7 @@ class Insert:
         self.fields_order = None
 
     def __generate_insert(self):
-        f = []
-        v = []
+        f, v = [], []
         for field in self.fields_order:
             f.append(field)
             generator = self.generators[field]
@@ -162,7 +163,6 @@ class Insert:
         self.fields_order = fields_order
 
     def perform(self, cursor, times=1, filename=None):
-
         for sql in self.generate(times):
             print(sql)
 
@@ -185,7 +185,6 @@ class Insert:
 """
 """
 if __name__ == '__main__':
-
 
     i = Insert('kx_user', 
         company_id=[2, 3, 5], 

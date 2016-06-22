@@ -38,8 +38,9 @@ class SimpleQueryStatements:
 
     def parse(self, code):
         statements = self.__compile(code)
-        for statement in statements:
-            yield statement
+        if statements is not None:
+            for statement in statements:
+                yield statement
 
 """
 SimpleQueryExecutor
@@ -120,7 +121,7 @@ class SimpleQueryExecutor:
             self.__add_exec_state(exec_state)
 
             if func.func_name == "@mysql":
-                print(handle)
+                # print(handle)
                 self.set_connection(handle)
             
 

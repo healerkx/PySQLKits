@@ -78,7 +78,7 @@ class SimpleQueryTranslator:
         for exec_state in self.exec_states:
             if var == exec_state[0]:
                 return exec_state[1]
-        raise Exception('Undefined symbol')
+        raise Exception('Undefined symbol %s' % var)
   
     # get symbol value from str, a.b or a
     def get_symbol_value(self, sym_str):
@@ -112,7 +112,7 @@ class SimpleQueryTranslator:
 
     def can_convert_to_sql(self, statement):
         body = statement[2]
-        if body[0] == 'func':
+        if body[0] == 'query':
             func_name = body[1]
             if not func_name.startswith('@'):
                 return True
@@ -201,7 +201,7 @@ class SimpleQueryTranslator:
     def simple_query_to_sql(self, statement):
         receiver_name = statement[1]
         body = statement[2]
-        if body[0] == 'func':
+        if body[0] == 'query':
             table_name = body[1]
             param_list = body[2]
 
