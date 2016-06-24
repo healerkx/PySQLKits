@@ -102,7 +102,7 @@ class SimpleQueryExecutor:
         print(statement)
         receiver = statement[1]
         t = SimpleQueryTranslator()
-        if t.can_convert_to_sql(statement):
+        if is_query(statement):
             t.set_exec_states(self.exec_states)
 
             sql = t.simple_query_to_sql(statement)
@@ -111,7 +111,7 @@ class SimpleQueryExecutor:
             table_name = statement[2][1]
             if self.__exec_query(receiver, sql, table_name):
                 self.__dump_exec_states()
-        elif t.is_buildin_func(statement):
+        elif is_buildin_func(statement):
             t.set_exec_states(self.exec_states)
             func = t.get_func_obj(statement)
 

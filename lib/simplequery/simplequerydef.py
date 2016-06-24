@@ -131,7 +131,8 @@ def p_sym_list(p):
         p[0].append(p[3])   
 
 def p_assign(p):
-    """assign       : NAME EQU rvalue"""
+    """assign       : NAME EQU rvalue
+                    | BUILDIN EQU rvalue"""
     p[0] = ('assign', p[1], p[3])
     print(p[1], p[3])
 

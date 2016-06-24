@@ -286,10 +286,6 @@ class BinlogReader:
         data_len = header.event_len - BINLOG_EVENT_HEADER_LEN - post_header_len - extra_data_len
 
         data = self.read_bytes(data_len - 4)
-        for i in data:
-            print(i)
-
-        print("-"* 40)
 
         col_count, size = self.read_field_length(data)
         data = data[size:]
@@ -298,7 +294,7 @@ class BinlogReader:
         bmp1_size = int((col_count + 7) / 8)
         bmp2_size = int((col_count + 7) / 8)
         bmp = data[: bmp1_size + bmp2_size]
-        print(bmp)
+        
         
         remain = data[bmp1_size:]
         if update:

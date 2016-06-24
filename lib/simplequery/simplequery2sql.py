@@ -12,6 +12,15 @@ def sym_to_str(sym):
         return sym_to_str(sym[1]) + '.' + sym[2]
 
 
+def is_buildin_func(statement):
+    body = statement[2]
+    return body[0] == 'func' and body[1].startswith('@')
+
+
+def is_query(statement):
+    body = statement[2]
+    return body[0] == 'query' and not body[1].startswith('@')
+
 """
 """
 class Func:
@@ -97,6 +106,8 @@ class SimpleQueryTranslator:
         sym_str = sym_to_str(sym)
         arr_handle = self.get_symbol_value(sym_str)
         array = arr_handle.get_value()
+        if sym_str == 'argv':
+            assert isinstance(array, list)
         if index < len(array):
             val = array[index]
             return val 
@@ -118,13 +129,7 @@ class SimpleQueryTranslator:
                 return True
         return False
 
-    def is_buildin_func(self, statement):
-        body = statement[2]
-        if body[0] == 'func':
-            func_name = body[1]
-            if func_name.startswith('@'):
-                return True
-        return False        
+
 
     def get_select_condition(self, assign):
         lvalue = assign[1]
