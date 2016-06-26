@@ -15,6 +15,10 @@ tokens = (
     'RBRACKET',
     'VLINE',
     'EQU',
+    'GT',
+    'LT',
+    'GTE',
+    'LTE',
 
 )
 
@@ -27,6 +31,10 @@ t_LBRACKET  = '\['
 t_RBRACKET  = '\]'
 t_VLINE     = '\|'
 t_EQU       = '='
+t_GT        = '>'
+t_LT        = '<'
+t_GTE       = '>='
+t_LTE       = '<='
 
 reserved = {
     
@@ -128,7 +136,7 @@ def p_sym_list(p):
         p[0] = [p[1]]
     else:
         p[0] = p[1]
-        p[0].append(p[3])   
+        p[0].append(p[3])
 
 def p_assign(p):
     """assign       : NAME EQU rvalue
@@ -137,11 +145,10 @@ def p_assign(p):
     print(p[1], p[3])
 
 def p_param(p):
-    """param        : assign
-                    | rvalue"""
+    """param        : rvalue"""
     p[0] = ('param', p[1])
 
-def p_param_list(p):    
+def p_param_list(p):
     """param_list   : param_list COMMA param
                     | param"""
     if len(p) == 2:
@@ -160,6 +167,33 @@ def p_params(p):
         p[0] = []
     print(p[0])
 
+
+def p_condition(p):
+    """condition    : symbol EQU rvalue
+                    | symbol GT rvalue
+                    | symbol LT rvalue
+                    | symbol GTE rvalue
+                    | symbol LTE rvalue"""
+    p[0] = ('condition', p[2], p[1], p[3])
+
+def p_condition_list(p):
+    """condition_list   : condition_list COMMA condition
+                        | condition"""
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1]
+        p[0].append(p[3])
+
+def p_conditions(p):
+    """conditions       : LPAREN condition_list RPAREN
+                        | LPAREN RPAREN"""
+    if len(p) == 4:
+        p[0] = p[2]
+    else:
+        p[0] = []
+    print(p[0])    
+
 def p_func(p):
     """func         :   BUILDIN params"""
 
@@ -167,7 +201,7 @@ def p_func(p):
     print(p[0])
 
 def p_query(p):
-    """query        :   NAME params"""
+    """query        :   NAME conditions"""
     p[0] = ('query', p[1], p[2])
     print(p[0])    
 
@@ -200,4 +234,21 @@ def p_statements(p):
     else:
         p[0] = p[1]
         p[0].append(p[2])
+
+
+if __name__ == '__main__':
+    import ply.lex as lex
+    import ply.yacc as yacc
+
+    use_lex_print = True
+    use_yacc_print = True
+    lex.lex()
+    parser = yacc.yacc(start = 'statements')
     
+    code = """
+@p(1, 3, t);
+kx_user(a>=1, b = 5);
+    """
+    statements = parser.parse(code)
+    print("=" * 40)
+    print(statements)
