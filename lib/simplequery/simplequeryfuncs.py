@@ -23,7 +23,7 @@ def print_table(datesets, filter_list):
     for dataset in datesets:
         row = dict_to_list(dataset, filter_list)
         x.add_row(row)
-    print(x)
+    return x
 
 @buildin
 def p(handle):
@@ -38,7 +38,8 @@ def p(handle):
             filter_list = list(map(lambda x: x[1], filters))
         else:
             filter_list = handle.get_default_fields()
-        print_table(datesets, filter_list)
+        table = print_table(datesets, filter_list)
+        print(table)
         return True
     return False
 
@@ -79,6 +80,11 @@ def mysql(host, username, passwd, database):
     return conn
 
 @buildin
+def redis(host, database):
+    redis = None
+    return redis
+
+@buildin
 def render(handle):
     assert(isinstance(handle, Handle))
     if handle.get_type() == 'file':
@@ -96,7 +102,7 @@ class Funcs:
     def call(func):
         func_name = func.func_name
         buildin_func = buildin_funcs[func_name]
-        print("exec func => ", *func.args)
+        # print("exec func => ", *func.args)
         return buildin_func(*func.args)
 
 """

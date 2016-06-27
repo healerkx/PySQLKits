@@ -1,25 +1,24 @@
 
 import datetime
 from simplequeryhandle import *
+from simplequeryvalues import *
 
 def is_sym(sym):
     return sym[0] == 'sym'
 
-def sym_to_str(sym):
-    if len(sym) == 2:
-        return sym[1]
-    else:
-        return sym_to_str(sym[1]) + '.' + sym[2]
-
+def is_func(sym):
+    return sym[0] == 'func'
 
 def is_buildin_func(statement):
     body = statement[2]
     return body[0] == 'func' and body[1].startswith('@')
 
-
 def is_query(statement):
     body = statement[2]
     return body[0] == 'query' and not body[1].startswith('@')
+
+
+
 
 """
 """
@@ -51,23 +50,6 @@ class SimpleQueryTranslator:
     def set_exec_states(self, exec_states):
         self.exec_states = exec_states
 
-    def get_param_symbol_str(symbol):
-        return symbol[1]
-
-    def get_param_assign_str(assign):
-        return "="
-
-    def get_param_str(param):
-        p = param[1]
-        if isinstance(p, tuple):
-            if p[0] == 'assign':
-                return get_param_assign_str(p)
-            elif p[0] == 'sym':
-                return get_param_symbol_str(p)
-        elif isinstance(p, str):
-            return "'%s'" % p
-        elif isinstance(p, int) or isinstance(p, float):
-            return "%s" % p
 
 
     # get a symbol value with pattern 'a.b'
@@ -99,20 +81,6 @@ class SimpleQueryTranslator:
         else:
             return self.get_val_value(var)
 
-    # Get symbol[index] value
-    def get_array_value(self, array_access):
-        sym = array_access[1]
-        index = array_access[2]
-        sym_str = sym_to_str(sym)
-        arr_handle = self.get_symbol_value(sym_str)
-        array = arr_handle.get_value()
-        if sym_str == 'argv':
-            assert isinstance(array, list)
-        if index < len(array):
-            val = array[index]
-            return val 
-        else:
-            raise Exception("Out of array bound")
 
     def get_filter_value(self, body):
         sym = body[1]
@@ -123,59 +91,61 @@ class SimpleQueryTranslator:
 
     def can_convert_to_sql(self, statement):
         body = statement[2]
-        if body[0] == 'query':
-            func_name = body[1]
-            if not func_name.startswith('@'):
-                return True
-        return False
+        return body[0] == 'query'
+            
 
+    def get_rvalue(self, rvalue):
+        e = Evaluator(self.exec_states)
+        v = e.get_value(rvalue)
+        
+        return v
+        
+    """
+    a > 1 ==> a > 1
+    a > ''
 
+    """
+    def get_select_condition(self, relation, lvalue, rvalue):
+        
+        field = sym_to_str(lvalue)
+        
+        v = self.get_rvalue(rvalue)
 
-    def get_select_condition(self, assign):
-        lvalue = assign[1]
-        rvalue = assign[2]
+        
+        if relation != '=':
+            return "%s %s '%s'" % (field, relation, v)
+        else:
+            if isinstance(v, tuple):
+                return "%s >= '%s' and %s < '%s'" % (field, v[0], field, v[1])
+            else:
+                return "%s = '%s'" % (field, v)
 
-        if isinstance(rvalue, str):
-            return "%s = '%s'" % (lvalue, rvalue)
-        elif isinstance(rvalue, int):
-            return "%s = %s" % (lvalue, rvalue)
-        elif isinstance(rvalue, float):
-            return "%s = %s" % (lvalue, rvalue)
-        elif is_sym(rvalue):
-            if rvalue[1] == '@today':
-                today_start = str(datetime.date.today())
-                today_end = str(datetime.date.today() + datetime.timedelta(1))
-                return "%s >= '%s' AND %s <= '%s'" % (lvalue, today_start, lvalue, today_end)
-            a = sym_to_str(rvalue)
-            value = self.get_symbol_value(a)
-
-            if len(value) == 0:
-                return None
-
-            value_list = ",".join(map(lambda x: "%s" % x, value))
-            equals = "%s in (%s)" % (lvalue, value_list)
-            return equals
-        elif rvalue[0] == 'arrval':
-            val = self.get_array_value(rvalue)
-            return "%s = %s" % (lvalue, val)
 
     def get_select_orderby_limit(self, assign):
         return ""
 
-    def get_select_conditions(self, param_list):
+    def get_select_conditions(self, condition_list):
         conditions = []
-        for param in param_list:
-            body = param[1]
-            if body[0] == 'assign' and not body[1].startswith('@'):
-                condition = self.get_select_condition(body)
-                if condition:
-                    conditions.append(condition)
-        return ' AND '.join(conditions)
+        rules = []
+        for condition in condition_list:
+            if condition[0] == 'condition':
+                relation = condition[1] # == or >=, or ...
+                lvalue = condition[2]
+                rvalue = condition[3]
+                if isinstance(lvalue, str) and lvalue.startswith('@'):
+                    pass
+                else:
+                    condition = self.get_select_condition(relation, lvalue, rvalue)
+                    if condition:
+                        conditions.append(condition)
+        return ' AND '.join(conditions), ' '.join(rules)
 
-    def parse_arg(self, body):
-        return None
 
-    def get_args(self, param_list):
+
+    """
+    Get func's params
+    """
+    def get_params(self, param_list):
         args = []
         for param in param_list:
             body = param[1]
@@ -210,12 +180,12 @@ class SimpleQueryTranslator:
             table_name = body[1]
             param_list = body[2]
 
-            conditions = self.get_select_conditions(param_list)
-
+            conditions, other_rules = self.get_select_conditions(param_list)
+            print(conditions)
             sql = "select * from %s" % table_name
             if len(conditions.strip()) > 0:
-                sql += ' where %s' % conditions
-            # print(sql)
+                sql += ' where %s %s' % (conditions, other_rules)
+            print(sql)
             return sql
         return None
 
@@ -224,7 +194,7 @@ class SimpleQueryTranslator:
         assert(body[0] == 'func')
         func_name = body[1]
         param_list = body[2]
-        args = self.get_args(param_list)
+        args = self.get_params(param_list)
 
         return Func(func_name, args)
             

@@ -104,6 +104,7 @@ def p_rvalue(p):
     """rvalue       : filter
                     | arrval
                     | symbol
+                    | func
                     | INT
                     | FLOAT
                     | STR"""
@@ -138,11 +139,6 @@ def p_sym_list(p):
         p[0] = p[1]
         p[0].append(p[3])
 
-def p_assign(p):
-    """assign       : NAME EQU rvalue
-                    | BUILDIN EQU rvalue"""
-    p[0] = ('assign', p[1], p[3])
-    print(p[1], p[3])
 
 def p_param(p):
     """param        : rvalue"""
@@ -165,15 +161,15 @@ def p_params(p):
         p[0] = p[2]
     else:
         p[0] = []
-    print(p[0])
-
+    
 
 def p_condition(p):
-    """condition    : symbol EQU rvalue
-                    | symbol GT rvalue
-                    | symbol LT rvalue
-                    | symbol GTE rvalue
-                    | symbol LTE rvalue"""
+    """condition        : symbol EQU rvalue
+                        | BUILDIN EQU rvalue
+                        | symbol GT rvalue
+                        | symbol LT rvalue
+                        | symbol GTE rvalue
+                        | symbol LTE rvalue"""
     p[0] = ('condition', p[2], p[1], p[3])
 
 def p_condition_list(p):
@@ -192,20 +188,17 @@ def p_conditions(p):
         p[0] = p[2]
     else:
         p[0] = []
-    print(p[0])    
+
 
 def p_func(p):
     """func         :   BUILDIN params"""
-
     p[0] = ('func', p[1], p[2])
-    print(p[0])
+
 
 def p_query(p):
     """query        :   NAME conditions"""
     p[0] = ('query', p[1], p[2])
-    print(p[0])    
-
-
+    
 
 """
 Statement
@@ -247,8 +240,11 @@ if __name__ == '__main__':
     
     code = """
 @p(1, 3, t);
-kx_user(a>=1, b = 5);
+kx_user(a>=1, @limit = 5);
+a = @p(x, @unixtime(y));
+u = kx_user(a = 1, b<=5, @limit = 5);
     """
     statements = parser.parse(code)
     print("=" * 40)
-    print(statements)
+    for s in statements:
+        print(s)

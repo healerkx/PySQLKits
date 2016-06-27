@@ -96,10 +96,9 @@ class SimpleQueryExecutor:
         handle.set_value(*params)
         exec_state = (receiver, handle, None)
         self.__add_exec_state(exec_state)
-        
 
     def __run_statement(self, statement):
-        print(statement)
+        
         receiver = statement[1]
         t = SimpleQueryTranslator()
         if is_query(statement):
@@ -110,7 +109,8 @@ class SimpleQueryExecutor:
                 assert(False)
             table_name = statement[2][1]
             if self.__exec_query(receiver, sql, table_name):
-                self.__dump_exec_states()
+                pass
+                # self.__dump_exec_states()
         elif is_buildin_func(statement):
             t.set_exec_states(self.exec_states)
             func = t.get_func_obj(statement)
@@ -131,10 +131,9 @@ class SimpleQueryExecutor:
         self.__add_params(params)
 
         for statement in statements:
-            # print(statement)
             self.__run_statement(statement)
-            print('=' * 40)
-            print()
+        print('\n---- END ----')
+            
 
     def run_file(self, filename, params=None):
         with open(filename, 'r', encoding='UTF-8') as f:
