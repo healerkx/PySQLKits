@@ -83,11 +83,6 @@ class SimpleQueryExecutor:
     def __add_exec_state(self, exec_state):
         self.exec_states.append(exec_state)
 
-
-    def __exec(self, receiver, func):
-        result = Funcs.call(func)
-        return result
-
     def __add_params(self, *params):
         receiver = 'argv'
         handle = Handle()
@@ -112,15 +107,14 @@ class SimpleQueryExecutor:
                 pass
                 # self.__dump_exec_states()
         elif is_buildin_func(statement):
-            t.set_exec_states(self.exec_states)
-            func = t.get_func_obj(statement)
+            # t.set_exec_states(self.exec_states)
+            e = Evaluator(self.exec_states)
+            handle = e.exec_func(statement)
 
-            # call func and get return value
-            handle = self.__exec(receiver, func)
             exec_state = (receiver, handle)
             self.__add_exec_state(exec_state)
 
-            if func.func_name == "@mysql":
+            if isinstance(handle, MySQLdb.connections.Connection):
                 # print(handle)
                 self.set_connection(handle)
             

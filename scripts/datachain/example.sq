@@ -4,7 +4,7 @@
 @mysql('localhost', 'root', 'root', 'test');
 
 com = kx_company(company_type=argv[0], status=argv[1], @limit=5, @asc=company_id);
-
+@p(com);
 
 user = kx_user(company_id=com.company_id);
 f = @fopen('d:\\a.html');

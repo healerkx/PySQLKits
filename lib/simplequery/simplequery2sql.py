@@ -1,6 +1,5 @@
 
 import datetime
-from simplequeryhandle import *
 from simplequeryvalues import *
 
 def is_sym(sym):
@@ -19,29 +18,6 @@ def is_query(statement):
 
 
 
-
-"""
-"""
-class Func:
-    func_name = None
-    args = []
-    
-    def __init__(self, func_name, args):
-        self.func_name = func_name
-        self.args = args
-
-    def __str__(self):
-        """
-        For dump the Func object
-        """
-        args_str_list = []
-        for arg in self.args:
-            if isinstance(arg, str):
-                arg = "'%s'" % arg
-            args_str_list.append(str(arg))
-        args_str = ', '.join(args_str_list)
-        return "<%s(%s)>" % (self.func_name, args_str)
-
 """
 """
 class SimpleQueryTranslator:
@@ -51,44 +27,6 @@ class SimpleQueryTranslator:
         self.exec_states = exec_states
 
 
-
-    # get a symbol value with pattern 'a.b'
-    def get_field_value(self, var, field):
-        handle = self.get_val_value(var)
-        if handle.get_type() != 'dataset':
-            return []
-
-        dataset_list = handle.get_value()
-        values = []
-        for dataset in dataset_list:
-            values.append(dataset[field])
-        return values
-
-    # Get variable value (pattern 'a') as a Handle
-    def get_val_value(self, var):
-        for exec_state in self.exec_states:
-            if var == exec_state[0]:
-                return exec_state[1]
-        raise Exception('Undefined symbol %s' % var)
-  
-    # get symbol value from str, a.b or a
-    def get_symbol_value(self, sym_str):
-        var = sym_str
-        if '.' in sym_str:
-            var, field = sym_str.split('.')
-            values = self.get_field_value(var, field)
-            return values
-        else:
-            return self.get_val_value(var)
-
-
-    def get_filter_value(self, body):
-        sym = body[1]
-        filters = body[2]
-        handle = self.get_val_value(sym_to_str(sym))
-        handle.set_filters(filters)
-        return handle
-
     def can_convert_to_sql(self, statement):
         body = statement[2]
         return body[0] == 'query'
@@ -97,7 +35,6 @@ class SimpleQueryTranslator:
     def get_rvalue(self, rvalue):
         e = Evaluator(self.exec_states)
         v = e.get_value(rvalue)
-        
         return v
         
     """
@@ -106,17 +43,17 @@ class SimpleQueryTranslator:
 
     """
     def get_select_condition(self, relation, lvalue, rvalue):
-        
         field = sym_to_str(lvalue)
-        
         v = self.get_rvalue(rvalue)
 
-        
         if relation != '=':
             return "%s %s '%s'" % (field, relation, v)
         else:
             if isinstance(v, tuple):
                 return "%s >= '%s' and %s < '%s'" % (field, v[0], field, v[1])
+            elif isinstance(v, list):
+                vlist = ','.join(map(lambda x: "%s" % x, v))
+                return "%s in (%s)" % (field, vlist)
             else:
                 return "%s = '%s'" % (field, v)
 
@@ -141,35 +78,6 @@ class SimpleQueryTranslator:
         return ' AND '.join(conditions), ' '.join(rules)
 
 
-
-    """
-    Get func's params
-    """
-    def get_params(self, param_list):
-        args = []
-        for param in param_list:
-            body = param[1]
-            if isinstance(body, tuple):
-                param_type = body[0]
-                if param_type == 'assign' and not body[1].startswith('@'):
-                    args.append(body)
-                elif param_type == 'sym':
-                    sym_str = sym_to_str(body)
-                    value = self.get_symbol_value(sym_str)
-                    args.append(value)
-                elif param_type == 'arrval':
-                    value = self.get_array_value(body)
-                    args.append(value)
-                elif param_type == 'filter':
-                    value = self.get_filter_value(body)
-                    args.append(value)
-            elif isinstance(body, int):
-                args.append(body)
-            elif isinstance(body, str):
-                args.append(body)
-
-        return args
-
     """
     :param: exec_states []
     """
@@ -181,7 +89,7 @@ class SimpleQueryTranslator:
             param_list = body[2]
 
             conditions, other_rules = self.get_select_conditions(param_list)
-            print(conditions)
+            print("#", conditions)
             sql = "select * from %s" % table_name
             if len(conditions.strip()) > 0:
                 sql += ' where %s %s' % (conditions, other_rules)
@@ -189,12 +97,5 @@ class SimpleQueryTranslator:
             return sql
         return None
 
-    def get_func_obj(self, statement):
-        body = statement[2]
-        assert(body[0] == 'func')
-        func_name = body[1]
-        param_list = body[2]
-        args = self.get_params(param_list)
 
-        return Func(func_name, args)
             
