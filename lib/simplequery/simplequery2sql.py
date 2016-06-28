@@ -52,29 +52,39 @@ class SimpleQueryTranslator:
             if isinstance(v, tuple):
                 return "%s >= '%s' and %s < '%s'" % (field, v[0], field, v[1])
             elif isinstance(v, list):
-                vlist = ','.join(map(lambda x: "%s" % x, v))
-                return "%s in (%s)" % (field, vlist)
+                if len(v) > 0:  # BUG, field in () means filter out nothing, but implements equals remove the filter.
+                    vlist = ','.join(map(lambda x: "%s" % x, v))
+                    return "%s in (%s)" % (field, vlist)
             else:
                 return "%s = '%s'" % (field, v)
 
 
-    def get_select_orderby_limit(self, assign):
-        return ""
+    def get_select_orderby_limit(self, lvalue, rvalue):
+        if lvalue == '@limit':
+            if isinstance(rvalue, list):
+                return "limit %s, %s" % (rvalue[0], rvalue[1])
+            else:
+                return "limit %s" % rvalue
+
 
     def get_select_conditions(self, condition_list):
         conditions = []
         rules = []
         for condition in condition_list:
-            if condition[0] == 'condition':
-                relation = condition[1] # == or >=, or ...
-                lvalue = condition[2]
-                rvalue = condition[3]
-                if isinstance(lvalue, str) and lvalue.startswith('@'):
-                    pass
-                else:
-                    condition = self.get_select_condition(relation, lvalue, rvalue)
-                    if condition:
-                        conditions.append(condition)
+            if condition[0] != 'condition':
+                continue
+
+            relation = condition[1] # == or >=, or ...
+            lvalue = condition[2]
+            rvalue = condition[3]
+            if isinstance(lvalue, str) and lvalue.startswith('@'):
+                rule = self.get_select_orderby_limit(lvalue, rvalue)
+                if rule:
+                    rules.append(rule)
+            else:
+                condition = self.get_select_condition(relation, lvalue, rvalue)
+                if condition:
+                    conditions.append(condition)
         return ' AND '.join(conditions), ' '.join(rules)
 
 

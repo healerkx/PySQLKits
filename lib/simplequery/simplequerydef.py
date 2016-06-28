@@ -105,6 +105,7 @@ def p_rvalue(p):
                     | arrval
                     | symbol
                     | func
+                    | list
                     | INT
                     | FLOAT
                     | STR"""
@@ -124,6 +125,19 @@ def p_arrval(p):
     yacc_print('arrval', p)
     if len(p) == 5:
         p[0] = ('arrval', p[1], p[3])
+
+def p_list_items(p):
+    """list_items   : list_items COMMA rvalue
+                    | rvalue"""
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1]
+        p[0].append(p[3])
+
+def p_list(p):
+    """list         : LBRACKET list_items RBRACKET"""
+    p[0] = p[2]
 
 def p_filter(p):
     """filter       : symbol VLINE sym_list VLINE"""
