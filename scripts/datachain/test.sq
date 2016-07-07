@@ -9,4 +9,4 @@ s = db.ndcdb.user_station();
 @p(s|user_id, station_id|); # print users
 
 # here's the comment line
-@p("44444444444");
+@p('----------------------------------------');

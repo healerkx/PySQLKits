@@ -67,13 +67,15 @@ class SimpleQueryExecutor:
                 break
         if isinstance(handle, MySQLConnectionObject):
             conn = handle.get_value()
-            database_name = handle.get_database()
-            return conn, database_name
+            return conn
 
         return None
 
+    """
+    Execute MySQL query to fetch dataset.
+    """
     def __exec_query(self, receiver, translator, conn_var, database, table_name, conditions):
-        conn, database_name = self.get_connection(conn_var)
+        conn = self.get_connection(conn_var)
 
         with conn.cursor(MySQLdb.cursors.DictCursor) as cursor:
             sql = translator.simple_query_to_sql(database, table_name, conditions)
@@ -132,11 +134,10 @@ class SimpleQueryExecutor:
             exec_state = (receiver, handle)
             self.__add_exec_state(exec_state)
 
-            if isinstance(handle, MySQLdb.connections.Connection):
-                # print(handle)
-                self.set_connection(handle)
             
-
+    """
+    Run code with parameters
+    """
     def run_code(self, code, params):
         s = SimpleQueryStatements()
         statements = s.parse(code)
@@ -148,8 +149,8 @@ class SimpleQueryExecutor:
             
 
     def run_file(self, filename, params=None):
-        use_lex_print = True
-        use_yacc_print = True
+        # use_lex_print = True
+        # use_yacc_print = True
         with open(filename, 'r', encoding='UTF-8') as f:
             lines = f.readlines()
             self.run_code(''.join(lines), params)
