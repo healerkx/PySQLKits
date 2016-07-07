@@ -1,8 +1,9 @@
 
-from simplequeryhandle import *
+
 from prettytable import PrettyTable
 import webbrowser
 import MySQLdb
+from runtime import *
 
 buildin_funcs = dict()
 
@@ -31,17 +32,32 @@ def p(handle):
     if handle_type == int or handle_type == str:
         print(handle)
         return True
-    if handle.get_type() == 'dataset':
-        datesets = handle.get_value()
-        filters = handle.get_filters()
-        if filters is not None:
-            filter_list = list(map(lambda x: x[1], filters))
-        else:
-            filter_list = handle.get_default_fields()
-        table = print_table(datesets, filter_list)
-        print(table)
-        return True
+    if SqObject.is_sq_object(handle):
+        if isinstance(handle, MySQLConnectionObject):
+            print(handle.conn)
+            return True
+        elif isinstance(handle, RedisConnectionObject):
+            print("Redis")
+            return True
+        elif isinstance(handle, DatasetObject):
+            datesets = handle.get_value()
+            filters = handle.get_filters()
+            if filters is not None:
+                filter_list = list(map(lambda x: x[1], filters))
+            else:
+                filter_list = handle.get_default_fields()
+            table = print_table(datesets, filter_list)
+            print(table)
+            return True
     return False
+
+
+@buildin
+def today(offset=0):
+    import datetime
+    today_start = str(datetime.date.today() + datetime.timedelta(offset))
+    today_end = str(datetime.date.today() + datetime.timedelta(offset + 1))
+    return (today_start, today_end)
 
 
 @buildin
@@ -73,16 +89,22 @@ def fclose(handle):
 
 
 @buildin
-def mysql(host, username, passwd, database):
-    params = {'host': host, 'user': username, 'passwd': passwd, 'db': database, 'charset': "utf8"}
+def mysql(host, username, passwd, database=''):
+    params = {'host': host, 'user': username, 'passwd': passwd, 'charset': 'utf8'}
+    if len(database) > 0:
+        params['db'] = database
     conn = MySQLdb.connect(**params)
     
-    return conn
+    obj = MySQLConnectionObject(conn)
+    obj.set_database(database)
+    return obj
 
 @buildin
 def redis(host, database):
-    redis = None
-    return redis
+    conn = None
+    # TODO:
+    obj = RedisConnectionObject(conn)
+    return obj
 
 @buildin
 def render(handle):
@@ -91,11 +113,31 @@ def render(handle):
         url = handle.get_name()
         webbrowser.open(url) 
         return True
-    assert(False)
+
     # Only support File name as a param
     return False
 
+"""
+"""
+class Func:
+    func_name = None
+    args = []
 
+    def __init__(self, func_name, args):
+        self.func_name = func_name
+        self.args = args
+
+    def __str__(self):
+        """
+        For dump the Func object
+        """
+        args_str_list = []
+        for arg in self.args:
+            if isinstance(arg, str):
+                arg = "'%s'" % arg
+            args_str_list.append(str(arg))
+        args_str = ', '.join(args_str_list)
+        return "<%s(%s)>" % (self.func_name, args_str)
 
 class Funcs:
     @staticmethod

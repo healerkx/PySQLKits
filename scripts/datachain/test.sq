@@ -1,10 +1,12 @@
 
 
-@mysql('localhost', 'root', 'root', 'test');
+db = @mysql('localhost', 'root', 'root');
 
-com = kx_company(company_type=1);
-@p(com);
-f = @fopen('a.html');
-@t(f, com|company_name, company_type|);
+user = db.test.kx_user(create_time < @today(-2));
+@p(user);
 
-@render(f);
+s = db.ndcdb.user_station();
+@p(s|user_id, station_id|); # print users
+
+# here's the comment line
+@p("44444444444");

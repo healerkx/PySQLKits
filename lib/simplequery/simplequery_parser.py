@@ -19,7 +19,6 @@ tokens = (
     'LT',
     'GTE',
     'LTE',
-
 )
 
 t_COMMA     = ','
@@ -93,7 +92,8 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-t_ignore  = ' \t'
+t_ignore            = ' \t'
+t_ignore_COMMENT    = '\#.*'
 ######################################################################
 # yacc
 def p_error(p):
@@ -210,14 +210,11 @@ def p_func(p):
 
 
 def p_query(p):
-    """query        :   NAME conditions"""
-    p[0] = ('query', p[1], p[2])
+    """query        :   NAME DOT NAME DOT NAME conditions"""
+    p[0] = ('query', p[1], p[3], p[5], p[6])
     
 
-"""
-Statement
-"""
-def p_statememt(p):
+def p_statement(p):
     """statement    :   NAME EQU func SEMI
                     |   NAME EQU query SEMI
                     |   func SEMI
@@ -254,9 +251,9 @@ if __name__ == '__main__':
     
     code = """
 @p(1, 3, t);
-kx_user(a>=1, @limit = 5);
+conn.db.kx_user(a>=1, @limit = 5);
 a = @p(x, @unixtime(y));
-u = kx_user(a = 1, b<=5, @limit = 5);
+u = conn.db.kx_user(a = 1, b<=5, @limit = 5);
     """
     statements = parser.parse(code)
     print("=" * 40)

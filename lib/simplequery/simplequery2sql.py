@@ -1,6 +1,6 @@
+#
 
-import datetime
-from simplequeryvalues import *
+from evaluator import *
 
 def is_sym(sym):
     return sym[0] == 'sym'
@@ -12,7 +12,7 @@ def is_buildin_func(statement):
     body = statement[2]
     return body[0] == 'func' and body[1].startswith('@')
 
-def is_query(statement):
+def is_mysql_query(statement):
     body = statement[2]
     return body[0] == 'query' and not body[1].startswith('@')
 
@@ -43,10 +43,13 @@ class SimpleQueryTranslator:
 
     """
     def get_select_condition(self, relation, lvalue, rvalue):
+
         field = sym_to_str(lvalue)
         v = self.get_rvalue(rvalue)
 
         if relation != '=':
+            if isinstance(v, tuple):
+                v = v[0]
             return "%s %s '%s'" % (field, relation, v)
         else:
             if isinstance(v, tuple):
@@ -91,21 +94,16 @@ class SimpleQueryTranslator:
     """
     :param: exec_states []
     """
-    def simple_query_to_sql(self, statement):
-        receiver_name = statement[1]
-        body = statement[2]
-        if body[0] == 'query':
-            table_name = body[1]
-            param_list = body[2]
+    def simple_query_to_sql(self, database_name, table_name, conditions):
 
-            conditions, other_rules = self.get_select_conditions(param_list)
-            print("#", conditions)
-            sql = "select * from %s" % table_name
-            if len(conditions.strip()) > 0:
-                sql += ' where %s %s' % (conditions, other_rules)
-            print(sql)
-            return sql
-        return None
+        condition_part, other_rules = self.get_select_conditions(conditions)
+        print("#", condition_part)
+        sql = "select * from `%s`.`%s`" % (database_name, table_name)
+        if len(condition_part.strip()) > 0:
+            sql += ' where %s %s' % (condition_part, other_rules)
+        print(sql)
+        return sql
+        
 
 
             

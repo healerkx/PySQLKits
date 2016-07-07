@@ -1,7 +1,6 @@
 
 import datetime
-from simplequeryhandle import *
-from simplequeryfuncs import *
+from buildin_funcs import *
 
 def sym_to_str(symbol):
     if len(symbol) == 2:
@@ -10,27 +9,7 @@ def sym_to_str(symbol):
         return sym_to_str(symbol[1]) + '.' + symbol[2]
 
 
-"""
-"""
-class Func:
-    func_name = None
-    args = []
-    
-    def __init__(self, func_name, args):
-        self.func_name = func_name
-        self.args = args
 
-    def __str__(self):
-        """
-        For dump the Func object
-        """
-        args_str_list = []
-        for arg in self.args:
-            if isinstance(arg, str):
-                arg = "'%s'" % arg
-            args_str_list.append(str(arg))
-        args_str = ', '.join(args_str_list)
-        return "<%s(%s)>" % (self.func_name, args_str)
 
 class Evaluator:
 
@@ -129,16 +108,19 @@ class Evaluator:
 
 
     def get_value(self, e):
-        print("EEEE", e)
+        if isinstance(e, int) or isinstance(e, str):
+            return e
         if e[0] == 'arrval':
             return self.get_array_value(e)
+            
         elif e[0] == 'sym':
             sym_str = sym_to_str(e)
             v = self.get_symbol_value(sym_str)
             return v
+
         elif e[0] == 'func':
-            if e[1] == '@today':
-                today_start = str(datetime.date.today())
-                today_end = str(datetime.date.today() + datetime.timedelta(1))
-                return (today_start, today_end)
-            return "Call"
+            func = Func(e[1], self.get_params(e[2]))
+            result = Funcs.call(func)
+            # print(result)
+            return result
+

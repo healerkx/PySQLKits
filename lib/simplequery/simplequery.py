@@ -2,13 +2,13 @@
 import ply.lex as lex
 import ply.yacc as yacc
 import MySQLdb
-
-from simplequerydef import *
+from runtime import *
+from simplequery_parser import *
 from simplequery2sql import *
-from simplequeryfuncs import *
+from buildin_funcs import *
 
 def get_mysql_connection(**params):
-    params = {'host':'localhost', 'user':'root', 'passwd':'root', 'db':"test"}
+    params = {'host':'localhost', 'user':'root', 'passwd':'root', 'db':'test'}
     conn = MySQLdb.connect(**params)
 
     with conn.cursor() as c:
@@ -56,20 +56,38 @@ class SimpleQueryExecutor:
 
     def __dump_exec_states(self):
         for exec_state in self.exec_states:
-            print(exec_state) 
+            print(exec_state)
 
-    def __exec_query(self, receiver, sql, table_name):
-        with self.conn.cursor(MySQLdb.cursors.DictCursor) as cursor:
+    def get_connection(self, db_name):
+        handle = None
+        for exec_state in self.exec_states:
+            print(exec_state)
+            if exec_state[0] == db_name:
+                handle = exec_state[1]
+                break
+        if isinstance(handle, MySQLConnectionObject):
+            conn = handle.get_value()
+            database_name = handle.get_database()
+            return conn, database_name
+
+        return None
+
+    def __exec_query(self, receiver, translator, conn_var, database, table_name, conditions):
+        conn, database_name = self.get_connection(conn_var)
+
+        with conn.cursor(MySQLdb.cursors.DictCursor) as cursor:
+            sql = translator.simple_query_to_sql(database, table_name, conditions)
+
             r = cursor.execute(sql)
-
+            
             results = cursor.fetchall()
-            handle = Handle()
-            handle.set_type('dataset')
+
+            handle = DatasetObject()
             handle.set_name(receiver)
             handle.set_value(results)
 
             # set fields for order
-            rows = cursor.execute('SHOW COLUMNS FROM %s' % table_name)
+            rows = cursor.execute('SHOW COLUMNS FROM `%s`.`%s`' % (database, table_name))
             columns = cursor.fetchall()
             fields = list(map(lambda x: x['Field'], columns))
             handle.set_default_fields(fields)
@@ -85,25 +103,25 @@ class SimpleQueryExecutor:
 
     def __add_params(self, *params):
         receiver = 'argv'
-        handle = Handle()
-        handle.set_type('array')
+        handle = ArrayValueObject()
         handle.set_name(receiver)
         handle.set_value(*params)
         exec_state = (receiver, handle, None)
         self.__add_exec_state(exec_state)
 
     def __run_statement(self, statement):
-        
         receiver = statement[1]
-        t = SimpleQueryTranslator()
-        if is_query(statement):
+
+        if is_mysql_query(statement):
+            t = SimpleQueryTranslator()
             t.set_exec_states(self.exec_states)
 
-            sql = t.simple_query_to_sql(statement)
-            if self.conn is None:
-                assert(False)
-            table_name = statement[2][1]
-            if self.__exec_query(receiver, sql, table_name):
+            query = statement[2]
+            conn_var = query[1]
+            database = query[2]
+            table_name = query[3]
+            conditions = query[4]
+            if self.__exec_query(receiver, t, conn_var, database, table_name, conditions):
                 pass
                 # self.__dump_exec_states()
         elif is_buildin_func(statement):
@@ -130,6 +148,8 @@ class SimpleQueryExecutor:
             
 
     def run_file(self, filename, params=None):
+        use_lex_print = True
+        use_yacc_print = True
         with open(filename, 'r', encoding='UTF-8') as f:
             lines = f.readlines()
             self.run_code(''.join(lines), params)
