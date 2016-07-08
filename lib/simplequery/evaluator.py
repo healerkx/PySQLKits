@@ -1,6 +1,6 @@
 
 import datetime
-from buildin_funcs import *
+from runtime import *
 
 def sym_to_str(symbol):
     if len(symbol) == 2:
@@ -9,7 +9,23 @@ def sym_to_str(symbol):
         return sym_to_str(symbol[1]) + '.' + symbol[2]
 
 
+buildin_funcs = dict()
 
+
+"""
+"""
+def buildin(func):
+    func_name = '@' + func.__name__
+    buildin_funcs[func_name] = func
+    return func
+
+class Funcs:
+    @staticmethod
+    def call(func, exec_states):
+        func_name = func.func_name
+        buildin_func = buildin_funcs[func_name]
+        # print("exec func => ", *func.args)
+        return buildin_func(exec_states, *func.args)
 
 class Evaluator:
 
@@ -43,7 +59,7 @@ class Evaluator:
         return args        
     
     def get_func_obj(self, statement):
-        body = statement[2]
+        body = statement
         assert(body[0] == 'func')
         func_name = body[1]
         param_list = body[2]
@@ -53,7 +69,8 @@ class Evaluator:
 
     def exec_func(self, statement):
         func = self.get_func_obj(statement)
-        ret = Funcs.call(func)
+
+        ret = Funcs.call(func, self.exec_states)
         return ret
 
     def get_filter_value(self, body):
@@ -120,7 +137,7 @@ class Evaluator:
 
         elif e[0] == 'func':
             func = Func(e[1], self.get_params(e[2]))
-            result = Funcs.call(func)
+            result = Funcs.call(func, self.exec_states)
             # print(result)
             return result
 

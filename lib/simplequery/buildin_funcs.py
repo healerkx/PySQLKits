@@ -4,30 +4,65 @@ from prettytable import PrettyTable
 import webbrowser
 import MySQLdb
 from runtime import *
-
-buildin_funcs = dict()
-
-
-"""
-"""
-def buildin(func):
-    func_name = '@' + func.__name__
-    buildin_funcs[func_name] = func
-    return func
-
-def dict_to_list(dataset, filters):
-    return [dataset[f] for f in filters]
+from evaluator import *
 
 
-def print_table(datesets, filter_list):
+
+def dict_to_list(dataset, filters, exec_states):
+    result = []
+    
+    for item in filters:
+        if isinstance(item, str):
+            result.append(dataset[item])
+        elif isinstance(item, tuple) and item[0] == 'func':
+            func_name = item[1]
+            params = item[2]
+            filed = None
+            val = None
+            if len(params) > 0:
+                # The first param MUST be field
+                if params[0][0] != 'param':
+                    print(params)
+                    exit()
+                field = params[0][1][1]
+                val = dataset[field]
+
+            f = Func(func_name, [val])
+            ret = Funcs.call(f, exec_states)
+
+            result.append(ret)
+    
+    return result
+
+
+def print_table(datesets, filters, exec_states):
+    if filters is not None:
+        filter_list = get_filter_list(filters)
+    else:
+        filter_list = handle.get_default_fields()
     x = PrettyTable(filter_list)
     for dataset in datesets:
-        row = dict_to_list(dataset, filter_list)
+        row = dict_to_list(dataset, filters, exec_states)
         x.add_row(row)
     return x
 
+
+def get_filter_list(filters):
+    filter_list = []
+    for item in filters:
+        if isinstance(item, str):
+            filter_list.append(item)
+        elif isinstance(item, tuple) and item[0] == 'func':
+            params = item[2]
+            field = params[0][1][1]
+            filter_list.append(field)
+    return filter_list
+
+
+    
+
 @buildin
-def p(handle):
+def p(exec_states, handle):
     handle_type = type(handle)
     if handle_type == int or handle_type == str:
         print(handle)
@@ -42,18 +77,15 @@ def p(handle):
         elif isinstance(handle, DatasetObject):
             datesets = handle.get_value()
             filters = handle.get_filters()
-            if filters is not None:
-                filter_list = list(map(lambda x: x[1], filters))
-            else:
-                filter_list = handle.get_default_fields()
-            table = print_table(datesets, filter_list)
+
+            table = print_table(datesets, filters, exec_states)
             print(table)
             return True
     return False
 
 
 @buildin
-def today(offset=0):
+def today(exec_states, offset=0):
     import datetime
     today_start = str(datetime.date.today() + datetime.timedelta(offset))
     today_end = str(datetime.date.today() + datetime.timedelta(offset + 1))
@@ -61,7 +93,12 @@ def today(offset=0):
 
 
 @buildin
-def fopen(filename):
+def yes(exec_states, val):
+    # print("Yes", val)
+    return 'Yes' if val == 1 else 'No'
+
+@buildin
+def fopen(exec_states, filename):
     f = open(filename, 'w', encoding='UTF-8')
     handle = Handle()
     handle.set_type('file')
@@ -80,7 +117,7 @@ def fwrite(handle, content):
 
 
 @buildin
-def fclose(handle):
+def fclose(exec_states, handle):
     assert(isinstance(handle, Handle))
     if handle.get_type() == 'file':
         handle.get_value().close()
@@ -89,7 +126,7 @@ def fclose(handle):
 
 
 @buildin
-def mysql(host, username, passwd, database=''):
+def mysql(exec_states, host, username, passwd, database=''):
     params = {'host': host, 'user': username, 'passwd': passwd, 'charset': 'utf8'}
     if len(database) > 0:
         params['db'] = database
@@ -100,14 +137,14 @@ def mysql(host, username, passwd, database=''):
     return obj
 
 @buildin
-def redis(host, database):
+def redis(exec_states, host, database):
     conn = None
     # TODO:
     obj = RedisConnectionObject(conn)
     return obj
 
 @buildin
-def render(handle):
+def render(exec_states, handle):
     assert(isinstance(handle, Handle))
     if handle.get_type() == 'file':
         url = handle.get_name()
@@ -117,35 +154,9 @@ def render(handle):
     # Only support File name as a param
     return False
 
-"""
-"""
-class Func:
-    func_name = None
-    args = []
+from runtime import *
 
-    def __init__(self, func_name, args):
-        self.func_name = func_name
-        self.args = args
 
-    def __str__(self):
-        """
-        For dump the Func object
-        """
-        args_str_list = []
-        for arg in self.args:
-            if isinstance(arg, str):
-                arg = "'%s'" % arg
-            args_str_list.append(str(arg))
-        args_str = ', '.join(args_str_list)
-        return "<%s(%s)>" % (self.func_name, args_str)
-
-class Funcs:
-    @staticmethod
-    def call(func):
-        func_name = func.func_name
-        buildin_func = buildin_funcs[func_name]
-        # print("exec func => ", *func.args)
-        return buildin_func(*func.args)
 
 """
 """

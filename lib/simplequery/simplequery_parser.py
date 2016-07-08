@@ -135,23 +135,30 @@ def p_list_items(p):
         p[0] = p[1]
         p[0].append(p[3])
 
+# [1, 2, ....]
 def p_list(p):
     """list         : LBRACKET list_items RBRACKET"""
     p[0] = p[2]
 
-def p_filter(p):
-    """filter       : symbol VLINE sym_list VLINE"""
-    
-    p[0] = ('filter', p[1], p[3])
 
-def p_sym_list(p):
-    """sym_list     : sym_list COMMA symbol
-                    | symbol"""
+def p_filter_item(p):
+    """filter_item  : NAME
+                    | func"""
+    p[0] = p[1]
+
+def p_filter_items(p):
+    """filter_items : filter_items COMMA filter_item
+                    | filter_item"""
     if len(p) == 2:
         p[0] = [p[1]]
     else:
         p[0] = p[1]
         p[0].append(p[3])
+
+def p_filter(p):
+    """filter       : symbol VLINE filter_items VLINE"""
+    
+    p[0] = ('filter', p[1], p[3])
 
 
 def p_param(p):
@@ -254,6 +261,7 @@ if __name__ == '__main__':
 conn.db.kx_user(a>=1, @limit = 5);
 a = @p(x, @unixtime(y));
 u = conn.db.kx_user(a = 1, b<=5, @limit = 5);
+@p(u|user_id, @date(create_time)|);
     """
     statements = parser.parse(code)
     print("=" * 40)

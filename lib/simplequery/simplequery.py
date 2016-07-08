@@ -129,9 +129,9 @@ class SimpleQueryExecutor:
         elif is_buildin_func(statement):
             # t.set_exec_states(self.exec_states)
             e = Evaluator(self.exec_states)
-            handle = e.exec_func(statement)
+            retval = e.exec_func(statement[2])
 
-            exec_state = (receiver, handle)
+            exec_state = (receiver, retval)
             self.__add_exec_state(exec_state)
 
             

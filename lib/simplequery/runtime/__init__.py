@@ -6,6 +6,7 @@ from .ArrayValue import *
 from .MySQLConnection import *
 from .RedisConnection import *
 from .Dataset import *
+from .Function import *
 
 
 __all__ = ['SqObject',
@@ -13,4 +14,5 @@ __all__ = ['SqObject',
            'ArrayValueObject',
            'MySQLConnectionObject',
            'RedisConnectionObject',
-           'DatasetObject',]
+           'DatasetObject',
+           'Func', ]
