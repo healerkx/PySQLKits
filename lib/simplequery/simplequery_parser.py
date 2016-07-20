@@ -257,6 +257,7 @@ if __name__ == '__main__':
     parser = yacc.yacc(start = 'statements')
     
     code = """
+@p(@today(1));
 @p(1, 3, t);
 conn.db.kx_user(a>=1, @limit = 5);
 a = @p(x, @unixtime(y));

@@ -24,7 +24,7 @@ class Funcs:
     def call(func, exec_states):
         func_name = func.func_name
         buildin_func = buildin_funcs[func_name]
-        # print("exec func => ", *func.args)
+        print("exec func => ", *func.args)
         return buildin_func(exec_states, *func.args)
 
 class Evaluator:
@@ -51,6 +51,10 @@ class Evaluator:
                 elif param_type == 'filter':
                     value = self.get_filter_value(body)
                     args.append(value)
+                elif param_type == 'func':
+                    # TODO: Call func
+                    print("TODO:")
+                    args.append(122)
             elif isinstance(body, int):
                 args.append(body)
             elif isinstance(body, str):
