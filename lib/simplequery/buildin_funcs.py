@@ -63,8 +63,9 @@ def get_filter_list(filters):
 
 @buildin
 def p(exec_states, handle):
+    
     handle_type = type(handle)
-    if handle_type == int or handle_type == str:
+    if handle_type == int or handle_type == str or handle_type == tuple:
         print(handle)
         return True
     if SqObject.is_sq_object(handle):
@@ -87,8 +88,10 @@ def p(exec_states, handle):
 @buildin
 def today(exec_states, offset=0):
     import datetime
+    
     today_start = str(datetime.date.today() + datetime.timedelta(offset))
     today_end = str(datetime.date.today() + datetime.timedelta(offset + 1))
+    # print((today_start, today_end))
     return (today_start, today_end)
 
 
