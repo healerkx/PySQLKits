@@ -6,6 +6,7 @@ from .ArrayValue import *
 from .MySQLConnection import *
 from .RedisConnection import *
 from .Dataset import *
+from .FileAccess import *
 from .Function import *
 
 
@@ -15,4 +16,5 @@ __all__ = ['SqObject',
            'MySQLConnectionObject',
            'RedisConnectionObject',
            'DatasetObject',
+           'FileObj',
            'Func', ]

@@ -36,10 +36,8 @@ def dict_to_list(dataset, filters, exec_states):
 
 
 def print_table(datesets, filters, exec_states):
-    if filters is not None:
-        filter_list = get_filter_list(filters)
-    else:
-        filter_list = handle.get_default_fields()
+
+    filter_list = get_filter_list(filters)
     x = PrettyTable(filter_list)
     for dataset in datesets:
         row = dict_to_list(dataset, filters, exec_states)
@@ -70,7 +68,7 @@ def p(exec_states, handle):
         return True
     if SqObject.is_sq_object(handle):
         if isinstance(handle, MySQLConnectionObject):
-            print(handle.conn)
+            print(handle.get_value)
             return True
         elif isinstance(handle, RedisConnectionObject):
             print("Redis")
@@ -78,6 +76,8 @@ def p(exec_states, handle):
         elif isinstance(handle, DatasetObject):
             datesets = handle.get_value()
             filters = handle.get_filters()
+            if not filters:
+                filters = handle.get_default_fields()
 
             table = print_table(datesets, filters, exec_states)
             print(table)
@@ -103,8 +103,8 @@ def yes(exec_states, val):
 @buildin
 def fopen(exec_states, filename):
     f = open(filename, 'w', encoding='UTF-8')
-    handle = Handle()
-    handle.set_type('file')
+    handle = FileObj()
+    
     handle.set_name(filename)
     handle.set_value(f)
     

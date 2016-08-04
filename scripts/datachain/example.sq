@@ -1,9 +1,9 @@
 
 
 
-@mysql('localhost', 'root', 'root', 'test');
+d = @mysql('localhost', 'root', 'root', 'test');
 
-com = kx_company(company_type=argv[0], status=argv[1], @limit=[1,1], @asc=company_id);
+com = d.kx_company(company_type=argv[0], status=argv[1], @limit=[1,1], @asc=company_id);
 @p(com);
 
 user = kx_user(company_id=com.company_id);

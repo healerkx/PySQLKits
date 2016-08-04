@@ -76,7 +76,7 @@ class SimpleQueryExecutor:
     """
     def __exec_query(self, receiver, translator, conn_var, database, table_name, conditions):
         conn = self.get_connection(conn_var)
-
+        
         with conn.cursor(MySQLdb.cursors.DictCursor) as cursor:
             sql = translator.simple_query_to_sql(database, table_name, conditions)
 
@@ -101,6 +101,7 @@ class SimpleQueryExecutor:
 
     # append to exec_states and do more work here
     def __add_exec_state(self, exec_state):
+        print("#", exec_state)
         self.exec_states.append(exec_state)
 
     def __add_params(self, *params):
@@ -113,8 +114,9 @@ class SimpleQueryExecutor:
 
     def __run_statement(self, statement):
         receiver = statement[1]
-
+        
         if is_mysql_query(statement):
+            print("De")
             t = SimpleQueryTranslator()
             t.set_exec_states(self.exec_states)
 

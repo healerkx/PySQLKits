@@ -13,6 +13,7 @@ def is_buildin_func(statement):
     return body[0] == 'func' and body[1].startswith('@')
 
 def is_mysql_query(statement):
+    print(statement)
     body = statement[2]
     return body[0] == 'query' and not body[1].startswith('@')
 

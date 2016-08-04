@@ -257,12 +257,8 @@ if __name__ == '__main__':
     parser = yacc.yacc(start = 'statements')
     
     code = """
-@p(@today(1));
-@p(1, 3, t);
-conn.db.kx_user(a>=1, @limit = 5);
-a = @p(x, @unixtime(y));
-u = conn.db.kx_user(a = 1, b<=5, @limit = 5);
-@p(u|user_id, @date(create_time)|);
+db = @mysql('localhost', 'root', 'root', 'test');
+com = db.kx_company(company_type=1);
     """
     statements = parser.parse(code)
     print("=" * 40)

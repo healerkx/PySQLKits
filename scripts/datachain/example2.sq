@@ -1,5 +1,6 @@
 
 db = @mysql('localhost', 'root', 'root', 'test');
 
-com = db.kx_company(company_type=1);
+com = db.test.kx_company(company_type=1);
+@p(com);
 @p(com|company_id, company_name|);
