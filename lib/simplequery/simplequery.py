@@ -61,10 +61,10 @@ class SimpleQueryExecutor:
     def get_connection(self, db_name):
         handle = None
         for exec_state in self.exec_states:
-            print(exec_state)
             if exec_state[0] == db_name:
                 handle = exec_state[1]
                 break
+
         if isinstance(handle, MySQLConnectionObject):
             conn = handle.get_value()
             return conn
@@ -101,7 +101,6 @@ class SimpleQueryExecutor:
 
     # append to exec_states and do more work here
     def __add_exec_state(self, exec_state):
-        print("#", exec_state)
         self.exec_states.append(exec_state)
 
     def __add_params(self, *params):
@@ -116,7 +115,7 @@ class SimpleQueryExecutor:
         receiver = statement[1]
         
         if is_mysql_query(statement):
-            print("De")
+
             t = SimpleQueryTranslator()
             t.set_exec_states(self.exec_states)
 

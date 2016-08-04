@@ -13,11 +13,8 @@ def is_buildin_func(statement):
     return body[0] == 'func' and body[1].startswith('@')
 
 def is_mysql_query(statement):
-    print(statement)
     body = statement[2]
     return body[0] == 'query' and not body[1].startswith('@')
-
-
 
 """
 """
@@ -98,7 +95,7 @@ class SimpleQueryTranslator:
     def simple_query_to_sql(self, database_name, table_name, conditions):
 
         condition_part, other_rules = self.get_select_conditions(conditions)
-        print("#", condition_part)
+        # print("#", condition_part)
         sql = "select * from `%s`.`%s`" % (database_name, table_name)
         if len(condition_part.strip()) > 0:
             sql += ' where %s %s' % (condition_part, other_rules)
