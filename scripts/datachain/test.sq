@@ -1,8 +1,0 @@
-
-
-db = @mysql('localhost', 'root', 'root');
-
-user = db.test.kx_user(create_time < @today(-2));
-@p(user|name, @yes(status)|);
-
-

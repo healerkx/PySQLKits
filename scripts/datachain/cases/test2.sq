@@ -1,0 +1,3 @@
+
+db = @mysql('localhost', 'root', 'root', 'test');
+

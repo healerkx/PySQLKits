@@ -1,0 +1,8 @@
+
+# Func results as args of another Func
+# @today Func returns Python tuple of dates
+
+@p(@today(-1));
+@p(@today());
+@p(@today(0));
+@p(@today(1));
