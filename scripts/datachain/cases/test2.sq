@@ -1,4 +1,7 @@
 
+# pip install redis
+# But the cProfile result depict a slow connect via socket as the following command-line
+# python -m cProfile -s cumulative datachain.py cases\test2.sq > d:\a.txt
 
 redis = @redis('localhost', 0);
 
