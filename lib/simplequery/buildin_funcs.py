@@ -3,6 +3,7 @@
 from prettytable import PrettyTable
 import webbrowser
 import MySQLdb
+from redis import Redis
 from runtime import *
 from evaluator import *
 
@@ -71,7 +72,7 @@ def p(exec_states, handle):
             print(handle.get_value)
             return True
         elif isinstance(handle, RedisConnectionObject):
-            print("Redis")
+            print(handle.get_value)
             return True
         elif isinstance(handle, DatasetObject):
             datesets = handle.get_value()
@@ -141,9 +142,10 @@ def mysql(exec_states, host, username, passwd, database=''):
 
 @buildin
 def redis(exec_states, host, database):
-    conn = None
+    conn = Redis(host=host)
     # TODO:
     obj = RedisConnectionObject(conn)
+    obj.set_database(database)
     return obj
 
 @buildin

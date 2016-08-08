@@ -1,5 +1,6 @@
 # 
 import random
+# pip install python-dateutil
 from dateutil import parser as DateParse
 import time
 

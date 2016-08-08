@@ -16,6 +16,10 @@ def is_mysql_query(statement):
     body = statement[2]
     return body[0] == 'query' and not body[1].startswith('@')
 
+def is_redis_query(statement):
+    body = statement[2]
+    return body[0] == 'redis_query' and body[2].startswith('@')    
+
 """
 """
 class SimpleQueryTranslator:

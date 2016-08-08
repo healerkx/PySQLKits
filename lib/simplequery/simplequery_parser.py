@@ -215,6 +215,9 @@ def p_func(p):
     """func         :   BUILDIN params"""
     p[0] = ('func', p[1], p[2])
 
+def p_redis_query(p):
+    """redis_query  :   NAME DOT BUILDIN DOT NAME params"""
+    p[0] = ('redis_query', p[1], p[3], p[5], p[6])
 
 def p_query(p):
     """query        :   NAME DOT NAME DOT NAME conditions"""
@@ -224,8 +227,10 @@ def p_query(p):
 def p_statement(p):
     """statement    :   NAME EQU func SEMI
                     |   NAME EQU query SEMI
+                    |   NAME EQU redis_query SEMI
                     |   func SEMI
-                    |   query SEMI"""
+                    |   query SEMI
+                    |   redis_query SEMI"""
     if len(p) > 3:
         yacc_print("statement", p[1], p[3])
         p[0] = ("statement", p[1], p[3])
@@ -257,8 +262,11 @@ if __name__ == '__main__':
     parser = yacc.yacc(start = 'statements')
     
     code = """
-db = @mysql('localhost', 'root', 'root', 'test');
-com = db.kx_company(company_type=1);
+redis = @redis('localhost', 0);
+
+abc = redis.@0.abc();
+
+@p(abc);
     """
     statements = parser.parse(code)
     print("=" * 40)

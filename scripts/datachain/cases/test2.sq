@@ -1,3 +1,7 @@
 
-db = @mysql('localhost', 'root', 'root', 'test');
 
+redis = @redis('localhost', 0);
+
+abc = redis.@0.abc();
+
+@p(abc);

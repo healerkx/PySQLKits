@@ -68,6 +68,9 @@ class SimpleQueryExecutor:
         if isinstance(handle, MySQLConnectionObject):
             conn = handle.get_value()
             return conn
+        elif isinstance(handle, RedisConnectionObject):
+            conn = handle.get_value()
+            return conn            
 
         return None
 
@@ -99,6 +102,14 @@ class SimpleQueryExecutor:
             return True
         return False
 
+    def __exec_redis_query(self, receiver, conn_var, database, key_name, params):
+        conn = self.get_connection(conn_var)
+        if conn is not None:
+            handle = RedisConnectionObject.exec_command(conn, database, key_name, params)
+            exec_state = (receiver, handle)
+            self.__add_exec_state(exec_state)
+            # print(self.exec_states)
+
     # append to exec_states and do more work here
     def __add_exec_state(self, exec_state):
         self.exec_states.append(exec_state)
@@ -127,6 +138,15 @@ class SimpleQueryExecutor:
             if self.__exec_query(receiver, t, conn_var, database, table_name, conditions):
                 pass
                 # self.__dump_exec_states()
+        elif is_redis_query(statement):
+            redis = statement[2]
+            conn_var = redis[1]
+            database = redis[2][1:]
+            key_name = redis[3]
+            params = redis[4]
+            if self.__exec_redis_query(receiver, conn_var, database, key_name, params):
+                pass
+
         elif is_buildin_func(statement):
             # t.set_exec_states(self.exec_states)
             e = Evaluator(self.exec_states)
