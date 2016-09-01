@@ -1,0 +1,17 @@
+
+# Func results as args of another Func
+# @today Func returns Python tuple of dates
+
+db = @mysql('123.56.232.53', 'yuzhongmin', 'gc&r$SDHLC');
+
+
+r1 = db.qjs_db.jk_repayment(project_id=795);
+@p(r1|repayment_capital, repayment_interest, repayment_capital_interest, repayment_total, repayment_status|);
+
+
+r2 = db.qjs_db.jk_repayment_plan(project_id=795);
+@p(r2|repayment_capital, repayment_interest, repayment_capital_interest, repayment_total, repayment_status|);
+
+
+r3 = db.qjs_db.jk_repayment_plan_history(plan_id=r2.plan_id, history_id>48);
+@p(r3|repayment_capital, repayment_interest, repayment_capital_interest, repayment_total|);

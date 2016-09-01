@@ -95,7 +95,7 @@ class Evaluator:
     # get a symbol value with pattern 'a.b'
     def get_field_value(self, var, field):
         handle = self.get_val_value(var)
-        if handle.get_type() != 'dataset':
+        if not isinstance(handle, DatasetObject):
             return []
 
         dataset_list = handle.get_value()
