@@ -81,6 +81,10 @@ def find_prev_field(fields, name):
         last_field = field
     return None
 
+# The 8th col is Privileges
+def is_column_different(a, b):
+    return a[0:7] + a[-1:] != b[0:7] + b[-1:]
+
 def get_alter_table_sql(src_db, dest_db):
     (added, changed, deleted) = diff(src_db[1], dest_db[1])
     ret = []
@@ -96,8 +100,8 @@ def get_alter_table_sql(src_db, dest_db):
     pk_changed = False
     for columns in changed:
         a, b = columns
+        if is_column_different(a, b):
 
-        if a != b:
             ret.append("ALTER TABLE `%s` CHANGE COLUMN `%s` %s COMMENT '%s';" % (src_db[0], b[0], get_field(a), a[8]))
             if a[4] != b[4]:
                 pk_changed = True
