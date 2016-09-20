@@ -27,4 +27,6 @@ if __name__ == '__main__':
             'virtual_prize_type', 'virtual_prize_amount', 'display_position', 
             'lottery_id', 'member_id', 'prize_status',
             'status', 'create_time', 'last_modified'])
+            
     i.perform(None, 200000)
+

@@ -32,7 +32,7 @@ class RelatedDataSource:
     def __init__(self, filename):
         with open(filename, encoding='utf8') as file:
             self.__header = list(map(lambda x: x.strip(), file.readline().split(',')))
-            # print(self.__header)
+
             for line in file.readlines():
                 items = list(map(lambda x: x.strip(), line.split(',')))
                 self.__lines.append(items)
