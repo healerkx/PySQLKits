@@ -23,6 +23,69 @@ class ListGenerator(ValueGenerator):
     def __next__(self):
         return random.choice(self.v)
 
+class RelatedDataSource:
+    __generators = {}
+    __header = None
+    __lines = []
+    __choice = None
+
+    def __init__(self, filename):
+        with open(filename, encoding='utf8') as file:
+            self.__header = list(map(lambda x: x.strip(), file.readline().split(',')))
+            print(self.__header)
+            for line in file.readlines():
+                items = list(map(lambda x: x.strip(), line.split(',')))
+                self.__lines.append(items)
+
+    def get_index(self, field_name):
+        index = 0
+        while True:
+            if self.__header[index] == field_name:
+                return index
+            index += 1
+            if index >= len(self.__header):
+                return -1
+        return -1
+
+    def get_lines(self):
+        return self.__lines
+
+    def get_generator(self, field_name):
+        generator = None
+        if field_name not in self.__generators:
+            generator = RelatedDataGenerator(self)
+            self.__generators[field_name] = generator
+        
+        generator.set_field_name(field_name)
+        return generator
+
+    def get_choice(self):
+        return self.__choice
+
+    def set_choice(self, choice):
+        self.__choice = choice
+
+    def reset_choice(self):
+        self.__choice = None
+
+class RelatedDataGenerator(ValueGenerator):
+    field_index = -1
+    def __init__(self, related_data_source):
+        self.related_data_source = related_data_source
+
+    def set_field_name(self, field_name):
+        self.field_index = self.related_data_source.get_index(field_name)
+        # print("index:", self.field_index)
+
+    def __next__(self):
+        choice = self.related_data_source.get_choice()
+        if choice is None:
+            choice = random.choice(self.related_data_source.get_lines())
+            self.related_data_source.set_choice(choice)
+        
+        value = choice[self.field_index]
+        # print("V", line, self.field_index, value)
+        return value
 
 class DatetimeRange(ValueGenerator):
     def initialize(self):
@@ -133,18 +196,25 @@ main class for insertion
 class Insert:
     table_name = None
     options = None
+    related_data_source = None
 
     def __init__(self, table_name, **options):
         self.table_name = table_name
         self.options = options
         self.fields_order = None
 
+    def set_related_data_source(self, related_data_source):
+        self.related_data_source = related_data_source
+
     def __generate_insert(self):
         f, v = [], []
         for field in self.fields_order:
             f.append(field)
             generator = self.generators[field]
-            v.append("'%s'" % (next(generator)))
+            if generator is None:
+                v.append("null")
+            else:
+                v.append("'%s'" % (next(generator)))
         return "insert into `%s` (%s) values (%s);" % (self.table_name, ", ".join(f), ", ".join(v))
 
     def generate(self, times):
@@ -152,13 +222,16 @@ class Insert:
 
         for g in self.options:
             self.generators[g] = self.get_generator(g)
-
+        # set fields order
         if self.fields_order is None:
             self.fields_order = []
             for g in self.options:
                 self.fields_order.append(g)
         for i in range(0, times):
             yield self.__generate_insert()
+
+            if self.related_data_source is not None:
+                self.related_data_source.reset_choice()
 
     def set_fields_order(self, fields_order):
         self.fields_order = fields_order
@@ -188,14 +261,15 @@ class Insert:
 if __name__ == '__main__':
 
     i = Insert('kx_user', 
+        user_id=None,
         company_id=[2, 3, 5], 
-        username=EnglishName(unique=True), 
+        username=ChineseName(unique=True), 
         age=range(20, 90), 
         mobile=ChinaMobile(),
         time=DatetimeRange(begin='2015-12-23', end='2016-12-23'),
         order_id=IntegerRange(begin=100, end=1000, step=2, order='asc'))
 
-    i.set_fields_order(['username', 'age', 'mobile', 'company_id', 'time', 'order_id'])
+    i.set_fields_order(['user_id', 'username', 'age', 'mobile', 'company_id', 'time', 'order_id'])
     i.perform(None, 20)
 
 

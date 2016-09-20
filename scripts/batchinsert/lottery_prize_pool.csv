@@ -1,0 +1,10 @@
+prize_type,     prize_title,            virtual_prize_type,         virtual_prize_amount,           display_position
+1,              iPhone7,                 0,                           0,                               1
+1,              iPhone7 Plus,            0,                           0,                               2
+2,              加息券,                   1,                           0.5,                             3
+2,              加息券,                   1,                           1.0,                             4
+2,              现金券,                   2,                           100.0,                           5
+2,              现金券,                   2,                           200.0,                           6
+2,              现金券,                   2,                           300.0,                           7
+2,              现金券,                   2,                           400.0,                           8
+2,              现金券,                   2,                           500.0,                           9
