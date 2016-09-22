@@ -3,6 +3,7 @@ import random
 # pip install python-dateutil
 from dateutil import parser as DateParse
 import time
+import sys
 
 def unixtime(datestr):
     return int(DateParse.parse(datestr).timestamp())
@@ -197,6 +198,7 @@ class Insert:
     table_name = None
     options = None
     related_data_source = None
+    format = 'insert'
 
     def __init__(self, table_name, **options):
         self.table_name = table_name
@@ -206,7 +208,7 @@ class Insert:
     def set_related_data_source(self, related_data_source):
         self.related_data_source = related_data_source
 
-    def __generate_insert(self):
+    def __generate_insert(self, times, i):
         f, v = [], []
         for field in self.fields_order:
             f.append(field)
@@ -214,10 +216,15 @@ class Insert:
             if generator is None:
                 v.append("null")
             else:
-                v.append("'%s'" % (next(generator)))
-        return "insert into `%s` (%s) values (%s);" % (self.table_name, ", ".join(f), ", ".join(v))
+                v.append("'%s'" % str(next(generator)))
+        if self.format == 'inserts':
+            return "insert into `%s` (%s) values (%s);" % (self.table_name, ", ".join(f), ", ".join(v))
+        elif self.format == 'insert':
+            return "(%s)%s " % (", ".join(v), ',' if times - i > 1 else ';')
+        elif self.format == 'csv':
+            return ','.join(v)
 
-    def generate(self, times):
+    def generate(self, times, file):
         self.generators = {}
 
         for g in self.options:
@@ -227,8 +234,15 @@ class Insert:
             self.fields_order = []
             for g in self.options:
                 self.fields_order.append(g)
+
+        if self.format == 'csv':
+            file.write(','.join(self.fields_order) + "\n")
+        elif self.format == 'insert':
+            insert = "insert into `%s` (%s) values " % (self.table_name, ", ".join(self.fields_order))
+            file.write(insert + "\n")
+
         for i in range(0, times):
-            yield self.__generate_insert()
+            yield self.__generate_insert(times, i)
 
             if self.related_data_source is not None:
                 self.related_data_source.reset_choice()
@@ -236,9 +250,17 @@ class Insert:
     def set_fields_order(self, fields_order):
         self.fields_order = fields_order
 
-    def perform(self, cursor, times=1, filename=None):
-        for sql in self.generate(times):
-            print(sql)
+    def perform(self, times, filename, format='inserts'):
+        encoding = 'utf-8'
+        if format == 'csv':
+            encoding = 'gbk'
+        file = open(filename, 'w', encoding=encoding)
+
+        self.format = format
+        for line in self.generate(times, file):
+            file.write(line + "\n")
+
+        file.close()
 
     def get_generator(self, g):
         config = self.options[g]
@@ -260,6 +282,10 @@ class Insert:
 """
 if __name__ == '__main__':
 
+    if len(sys.argv) < 2:
+        print(1)
+        exit()
+
     i = Insert('kx_user', 
         user_id=None,
         company_id=[2, 3, 5], 
@@ -270,7 +296,7 @@ if __name__ == '__main__':
         order_id=IntegerRange(begin=100, end=1000, step=2, order='asc'))
 
     i.set_fields_order(['user_id', 'username', 'age', 'mobile', 'company_id', 'time', 'order_id'])
-    i.perform(None, 20)
+    i.perform(20)
 
 
 
