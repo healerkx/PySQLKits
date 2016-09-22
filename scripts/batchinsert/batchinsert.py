@@ -222,6 +222,7 @@ class Insert:
         elif self.format == 'insert':
             return "(%s)%s " % (", ".join(v), ',' if times - i > 1 else ';')
         elif self.format == 'csv':
+            v = list(map(lambda x: x.strip("'"), v))
             return ','.join(v)
 
     def generate(self, times, file):

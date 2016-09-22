@@ -33,9 +33,9 @@ if __name__ == '__main__':
             'lottery_id', 'member_id', 'prize_status',
             'status', 'create_time', 'last_modified'])
 
-    # i.set_fields_order(['display_position', 'prize_title', 'prize_type', 'virtual_prize_type', 'virtual_prize_amount', 'lottery_id'])
+    i.set_fields_order(['display_position', 'prize_title', 'prize_type', 'virtual_prize_type', 'virtual_prize_amount', 'lottery_id'])
 
     filename = sys.argv[1]
-    i.perform(10, filename, 'insert')
+    i.perform(10, filename, 'csv')
 
 
