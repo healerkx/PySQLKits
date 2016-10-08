@@ -5,9 +5,15 @@ import MySQLdb
 from sys import argv
 import re
 
+
+def is_table_name_pattern_match(table_name, table_name_reg_pattern):
+    m = table_name_reg_pattern.match(table_name)
+    if m is not None:
+        return True
+    return False
 """
 """
-def db_scheme(server, user, passwd, db):
+def db_scheme(server, user, passwd, db, table_name_pattern=None):
     host = server
     port = 3306
     if ':' in server:
@@ -20,7 +26,10 @@ def db_scheme(server, user, passwd, db):
     print("#Reading database scheme")
     ct = db.cursor()
     ct.execute("SHOW TABLES")
+    table_name_reg_pattern = re.compile(table_name_pattern)
     for (table,) in ct.fetchall():
+        if not is_table_name_pattern_match(table, table_name_reg_pattern):
+            continue
         ct.execute("SHOW FULL COLUMNS FROM " + table)
         fields = list(ct.fetchall())
         ret.append((table, fields))
@@ -101,7 +110,6 @@ def get_alter_table_sql(src_db, dest_db):
     for columns in changed:
         a, b = columns
         if is_column_different(a, b):
-
             ret.append("ALTER TABLE `%s` CHANGE COLUMN `%s` %s COMMENT '%s';" % (src_db[0], b[0], get_field(a), a[8]))
             if a[4] != b[4]:
                 pk_changed = True
@@ -124,9 +132,10 @@ def get_alter_table_sql(src_db, dest_db):
 a is src_db_args,
 b is dest_db_args
 """
-def diff_db(a, b):
-    src_db = db_scheme(a[2], a[0], a[1], a[3])
-    dest_db = db_scheme(b[2], b[0], b[1], b[3])
+def diff_db(a, b, c=None):
+
+    src_db = db_scheme(a[2], a[0], a[1], a[3], c)
+    dest_db = db_scheme(b[2], b[0], b[1], b[3], c)
 
     (added, changed, deleted) = diff(src_db[0], dest_db[0])
 
@@ -178,9 +187,13 @@ def main():
     if a is None or b is None:
         exit('Invalid arguments')
 
+    table_name_pattern = None
+    if len(argv) > 3: # table name pattern
+        table_name_pattern = argv[3]
+
     src_db_args = a.groups()
     dest_db_args = b.groups()
-    diff_db(src_db_args, dest_db_args)
+    diff_db(src_db_args, dest_db_args, table_name_pattern)
 
 if __name__ == "__main__":
     main()
