@@ -9,6 +9,7 @@ import re
 def is_table_name_pattern_match(table_name, table_name_reg_pattern):
     if table_name_reg_pattern is None:
         return True
+
     m = table_name_reg_pattern.match(table_name)
     if m is not None:
         return True
@@ -28,9 +29,11 @@ def db_scheme(server, user, passwd, db, table_name_pattern=None):
     print("#Reading database scheme")
     ct = db.cursor()
     ct.execute("SHOW TABLES")
+
     table_name_reg_pattern = None
     if table_name_pattern is not None:
         table_name_reg_pattern = re.compile(table_name_pattern)
+
     for (table,) in ct.fetchall():
         if not is_table_name_pattern_match(table, table_name_reg_pattern):
             continue
