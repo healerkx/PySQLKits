@@ -176,11 +176,10 @@ Usage:
 
     source, destination format:
         username:password@host[:port]/database
-    python3 mysqldiff.py root:root@localhost/mydb root:123456@192.168.1.101:3307/mydb
+    python3 mysqldiff.py root:root@localhost/mydb root:123456@192.168.1.101:3307/mydb jk_*
 
 Options:
-    --show-drop-table
-    --file
+    table-name-pattern
 """
 
 def main():

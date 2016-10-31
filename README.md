@@ -1,6 +1,8 @@
 # PySQLKits
 
+
 ### It's a toolkits set for MySQL, implementing in Python 3.5
+
 
 - batchinsert is for generating multi-lines of insert SQL, 
 > usage:
@@ -15,6 +17,7 @@ i = Insert('kx_user',
     time=DatetimeRange(begin='2015-12-23', end='2016-12-23'),
     order_id=IntegerRange(begin=100, end=1000, step=2, order='asc'))
 
+
 i.set_fields_order(['user_id', 'username', 'age', 'mobile', 'company_id', 'time', 'order_id'])
 i.perform(20)
 ```
@@ -25,9 +28,9 @@ i.perform(20)
 ```
 python datachain.py simplequery.sq
 ```
+
 - mysqlbinlog is a tool to parse MySQL binlog files, yield Row-Events.
 > It's supposed to access the path /examples, I give two examples using mysqlbinlog, One reads the current binlog changes and flush them into Redis. Another is for display an entry's change history.
-
 
 
 - mysqldiff compare two databases for diff, and generating create table, alter table, drop table SQL lines.

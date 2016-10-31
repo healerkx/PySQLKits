@@ -7,15 +7,11 @@ import re
 
 usage = """
 Usage:
-    python3 relations.py <source> [options]
+    python3 relations.py <source>
 
     source format:
         username:password@host[:port]/database
     python3 mysqldiff.py root:root@localhost/mydb
-
-Options:
-    --show-drop-table
-    --file
 """
 
 def db_scheme(server, user, passwd, db):
@@ -64,8 +60,6 @@ def calc_tables_relations(tables, id_table_map):
         for follower_table in follower_tables:
             table.add_follower_table(follower_table)
 
-        # exit()
-
 def main():
     # For local test
     argv = ["", 'root:root@127.0.0.1/school']
@@ -82,7 +76,7 @@ def main():
     calc_tables_relations(ret, id_table_map)
 
     # output the results
-    print("----")
+    print("----------------------------")
     for table in ret:
         print(table)
 

@@ -1,5 +1,4 @@
-
-
+#
 def get_primary_key(table_fields):
     pri = list(filter(lambda x: x[4] == 'PRI',  table_fields))
     return pri[0] if len(pri) > 0 else None
@@ -19,6 +18,7 @@ class TableInfo:
 
     def __add_depend_table(self, field_name, table_info):
         """
+        private
         Add tables I depend on
         """
         self.depends[field_name] = table_info
@@ -29,9 +29,8 @@ class TableInfo:
         Add the tables follow me. (My PK is other table FK)
         """
         self.followers.append(table_info)
-        # TODO: ~~~
+        # update depend table
         table_info.__add_depend_table(self.primary_key, self)
-
 
     def __str__(self):
         return "<table=%s %d / %d >" % (self.table_name, len(self.depends), len(self.followers))
