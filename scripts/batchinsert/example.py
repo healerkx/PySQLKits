@@ -9,7 +9,7 @@ if __name__ == '__main__':
         print("Please provide an output filename")
         exit()
 
-    s = RelatedDataSource('lottery_prize_pool2.csv')
+    s = RelatedDataSource('lottery_prize_pool.csv')
     i = Insert('hd_lottery_prize_pool', 
         prize_id=None,
         prize_type=s.get_generator('prize_type'),
@@ -36,6 +36,6 @@ if __name__ == '__main__':
     i.set_fields_order(['display_position', 'prize_title', 'prize_type', 'virtual_prize_type', 'virtual_prize_amount', 'lottery_id'])
 
     filename = sys.argv[1]
-    i.perform(10, filename, 'csv')
+    i.perform(10000, filename, 'csv')
 
 

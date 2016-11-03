@@ -113,20 +113,30 @@ def get_alter_table_sql(src_db, dest_db):
             alt += " AFTER `%s`" % prev[0]
         ret.append(alt + ';')
 
-    pk_changed = False
+    key_changed = False
+    prev = None
+    for a in changed:
+        print("", a[0], "\n", a[1])
+    # exit()
     for columns in changed:
         a, b = columns
+        
         if is_column_different(a, b):
-            ret.append("ALTER TABLE `%s` CHANGE COLUMN `%s` %s COMMENT '%s';" % (src_db[0], b[0], get_field(a), a[8]))
+            after = 'AFTER `%s`' % prev if prev else ""
+
+            ret.append("ALTER TABLE `%s` CHANGE COLUMN `%s` %s COMMENT '%s' %s;" % (src_db[0], b[0], get_field(a), a[8], after))
             if a[4] != b[4]:
-                pk_changed = True
-                if a[3] == "PRI":   # add new primary key
+                # TODO: PRI, MUL, UNI Should be checked here
+                key_changed = True
+                if a[4] == "PRI":   # add new primary key
                     ret.append("# WARNING: New primary key `%s` added" % a[0])
                 else:   # drop primary key
                     ret.append("# WARNING: Old primary key `%s` removed" % b[0])
+        
+        prev = a[0] # For AFTER 
 
-    if pk_changed:
-        new_pk = [f[0] for f in src_db[1] if f[3] == "PRI"]
+    if key_changed:
+        new_pk = [f[0] for f in src_db[1] if f[4] == "PRI"]
         ret.append("ALTER TABLE `%s` DROP PRIMARY KEY;" % src_db[0])
         if len(new_pk) > 0:
             ret.append("ALTER TABLE `%s` ADD PRIMARY KEY (`%s`);" % (src_db[0], "`, `".join(new_pk)))
