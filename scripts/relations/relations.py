@@ -4,17 +4,44 @@ from functools import *
 from tableinfo import *
 from sys import argv
 import re
+import json
 
 usage = """
 Usage:
-    python3 relations.py <source>
+    python3 relations.py <source> [--options]
 
     source format:
         username:password@host[:port]/database
     python3 mysqldiff.py root:root@localhost/mydb
 """
 
-def db_scheme(server, user, passwd, db):
+sub_systems_analysis = True
+
+
+def load_table_extra_info():
+    with open("workspace/school/config.json") as file:
+        jstr = file.read()
+        extra = json.loads(jstr)
+        return extra
+
+def adjust_id_fields(id_fields, table_name, extra_info):        
+    if table_name not in extra_info["fkMapping"]:
+        return id_fields
+    extra = extra_info["fkMapping"][table_name]
+    if len(extra) == 0:
+        return id_fields
+    
+    get_field_name = lambda x: (x[x.find('.')+1:],) if '.' in x else (x,)
+    for id_name in extra:
+        field_names = extra[id_name]
+
+        id_fields += list(map(get_field_name, field_names))
+    return id_fields
+    
+def db_scheme(extra_info, server, user, passwd, db):
+    """
+
+    """
     host = server
     port = 3306
     if ':' in server:
@@ -26,14 +53,18 @@ def db_scheme(server, user, passwd, db):
     ct = db.cursor()
     ct.execute("SHOW TABLES")
 
+
     ret = []
-    id_table_map = {}
+    id_table_map = {} # Stores id-field names => tableInfo mapping
     for (table,) in ct.fetchall():
         ct.execute("SHOW FULL COLUMNS FROM " + table)
         fields = ct.fetchall()
         table_info = TableInfo(table, fields)
 
-        for id_field in table_info.id_fields:
+        id_fields = adjust_id_fields(table_info.id_fields, table, extra_info)
+        # print(table, id_fields)
+
+        for id_field in id_fields:
             id_field_name = id_field[0]
             if id_field_name not in id_table_map:
                 id_table_map[id_field_name] = [table_info]
@@ -44,12 +75,12 @@ def db_scheme(server, user, passwd, db):
     ct.close()
 
     #for (a, b) in id_table_map.items():
-    #    print(a, b[0])
+    #    print("!", a, b[0])
     return ret, id_table_map, db
 
 
-def fetch_database_info(user, password, server, database):
-    return db_scheme(server, user, password, database)
+def fetch_database_info(extra_info, user, password, server, database):
+    return db_scheme(extra_info, server, user, password, database)
 
 def calc_tables_relations(tables, id_table_map):
     for table in tables:
@@ -60,6 +91,16 @@ def calc_tables_relations(tables, id_table_map):
         for follower_table in follower_tables:
             table.add_follower_table(follower_table)
 
+def print_relations(results):
+    for table in results:
+        print(table)
+        for f in table.followers:
+            print("\t", f)
+        print("\t", '-' * 30)
+        for d in table.depends:
+            print("\t", d)    
+        print("=" * 40, end='\n\n')   
+
 def main():
     # For local test
     argv = ["", 'root:root@127.0.0.1/school']
@@ -67,18 +108,22 @@ def main():
         print(usage)
         exit('Invalid arguments')
 
+    if '--without-sub-systems-analysis' in argv:
+        sub_systems_analysis = False
+
     u = re.compile("(.*):(.*)@(.*)/(.*)")
     a = u.match(argv[1])
     db_args = a.groups()
 
-    ret, id_table_map, db = fetch_database_info(*db_args)
+    extra_info = load_table_extra_info()
+
+    ret, id_table_map, db = fetch_database_info(extra_info, *db_args)
     
     calc_tables_relations(ret, id_table_map)
 
     # output the results
     print("----------------------------")
-    for table in ret:
-        print(table)
+    print_relations(ret)
 
 if __name__ == "__main__":
     main() 

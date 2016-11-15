@@ -27,6 +27,8 @@ class TableInfo:
         """
         :param table_info
         Add the tables follow me. (My PK is other table FK)
+        For the Graph vertex view:
+            MyTable -> OtherTable
         """
         self.followers.append(table_info)
         # update depend table
