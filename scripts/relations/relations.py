@@ -5,6 +5,7 @@ from tableinfo import *
 from sys import argv
 import re
 import json
+from graph import *
 
 usage = """
 Usage:
@@ -24,7 +25,10 @@ def load_table_extra_info():
         extra = json.loads(jstr)
         return extra
 
-def adjust_id_fields(id_fields, table_name, extra_info):        
+def adjust_id_fields(id_fields, table_name, extra_info):
+    """
+    config.json provide supplimental relationship between tables.
+    """     
     if table_name not in extra_info["fkMapping"]:
         return id_fields
     extra = extra_info["fkMapping"][table_name]
@@ -34,10 +38,11 @@ def adjust_id_fields(id_fields, table_name, extra_info):
     get_field_name = lambda x: (x[x.find('.')+1:],) if '.' in x else (x,)
     for id_name in extra:
         field_names = extra[id_name]
-
         id_fields += list(map(get_field_name, field_names))
+
     return id_fields
     
+
 def db_scheme(extra_info, server, user, passwd, db):
     """
 
@@ -52,7 +57,6 @@ def db_scheme(extra_info, server, user, passwd, db):
     print("#Reading database scheme")
     ct = db.cursor()
     ct.execute("SHOW TABLES")
-
 
     ret = []
     id_table_map = {} # Stores id-field names => tableInfo mapping
@@ -72,17 +76,19 @@ def db_scheme(extra_info, server, user, passwd, db):
                 id_table_map[id_field_name].append(table_info)
 
         ret.append(table_info)
-    ct.close()
 
-    #for (a, b) in id_table_map.items():
-    #    print("!", a, b[0])
+    ct.close()
     return ret, id_table_map, db
 
 
 def fetch_database_info(extra_info, user, password, server, database):
     return db_scheme(extra_info, server, user, password, database)
 
+
 def calc_tables_relations(tables, id_table_map):
+    """
+    Calc the tables' relations
+    """
     for table in tables:
         primary_key = table.primary_key[0]
         if primary_key not in id_table_map:
@@ -91,6 +97,7 @@ def calc_tables_relations(tables, id_table_map):
         for follower_table in follower_tables:
             table.add_follower_table(follower_table)
 
+
 def print_relations(results):
     for table in results:
         print(table)
@@ -98,8 +105,23 @@ def print_relations(results):
             print("\t", f)
         print("\t", '-' * 30)
         for d in table.depends:
-            print("\t", d)    
-        print("=" * 40, end='\n\n')   
+            print("\t", d)
+        print("=" * 40, end='\n\n')
+
+
+def init_graph_from_relations(results, func):
+    graph = Graph()
+    for table in results:
+        v = Vertex(table)
+        graph.add_vertex(table.table_name, v)
+
+    # connect each Vertex
+    for g in graph.vertex_map.values():
+        adjacencies = getattr(g.inner, func)
+        for a in adjacencies:
+            g.add_adjacency(graph.get_vertex(a.table_name))
+
+    return graph
 
 def main():
     # For local test
@@ -121,9 +143,26 @@ def main():
     
     calc_tables_relations(ret, id_table_map)
 
+    graph = init_graph_from_relations(ret, 'followers')
+    Graph.prints(graph)
+
+    paths = graph.all_paths(graph.get_vertex('t_student'), graph.get_vertex('t_attend'))
+    count = 0
+    for path in paths:
+        print('-' * 5, "Way %d" % count, '-' * 5)
+        Graph.prints(path)
+        count += 1
+
+    path = graph.find_path(graph.get_vertex('t_student'), graph.get_vertex('t_attend'))
+    Graph.prints(path)
+
     # output the results
-    print("----------------------------")
+    print("*" * 20, "table relations", "*" * 20)
     print_relations(ret)
 
+
 if __name__ == "__main__":
-    main() 
+    """
+
+    """
+    main()
