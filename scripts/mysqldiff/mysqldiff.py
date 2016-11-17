@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# Ref https://github.com/lexchou/utilities/blob/master/db_diff
+# Refer https://github.com/lexchou/utilities/blob/master/db_diff
 
 import MySQLdb
 from sys import argv
@@ -11,11 +10,8 @@ def is_table_name_pattern_match(table_name, table_name_reg_pattern):
         return True
 
     m = table_name_reg_pattern.match(table_name)
-    if m is not None:
-        return True
-    return False
-"""
-"""
+    return m is not None
+
 def db_scheme(server, user, passwd, db, table_name_pattern=None):
     host = server
     port = 3306
@@ -24,15 +20,13 @@ def db_scheme(server, user, passwd, db, table_name_pattern=None):
         port = int(port)
 
     ret = []
-    print("#Connecting to server %s by %s" % (server, user))
     db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, port=port, charset="utf8")
-    print("#Reading database scheme")
+    print("-- Connected to server %s by %s" % (server, user))
+    
     ct = db.cursor()
     ct.execute("SHOW TABLES")
 
-    table_name_reg_pattern = None
-    if table_name_pattern is not None:
-        table_name_reg_pattern = re.compile(table_name_pattern)
+    table_name_reg_pattern = re.compile(table_name_pattern) if table_name_pattern else None
 
     for (table,) in ct.fetchall():
         if not is_table_name_pattern_match(table, table_name_reg_pattern):
@@ -40,23 +34,15 @@ def db_scheme(server, user, passwd, db, table_name_pattern=None):
         ct.execute("SHOW FULL COLUMNS FROM " + table)
         fields = list(ct.fetchall())
         ret.append((table, fields))
+
     ct.close()
     return ret, db
 
 def make_map(data, keys):
-    ret = {}
-    for d in data:
-        if d[0] in keys:
-            ret[d[0]] = d
-    return ret
+    return dict( [(d[0], d) for d in data if d[0] in keys] )
 
 def items(data, keys):
-    ret = []
-    for d in data:
-        if d[0] in keys:
-            ret.append(d)
-    return ret
-
+    return [d for d in data if d[0] in keys]
 
 def diff(a, b):
     sa = set([x[0] for x in a])
@@ -89,35 +75,30 @@ def get_create_table_sql(table, db):
     ct.close()
     return r[1] + ";"
 
-def find_prev_field(fields, name):
-    last_field = None
-    for field in fields:
-        if field[0] == name:
-            return last_field
-        last_field = field
-    return None
+def get_prev_field(field_names, name):
+    return field_names[field_names.index(name) - 1]
 
-# The 8th col is Privileges
+# The 8th col is Privileges, do NOT compare it
 def is_column_different(a, b):
-    return a[0:7] + a[-1:] != b[0:7] + b[-1:]
+    return a[0:7] != b[0:7] or a[-1:] != b[-1:]
 
 def get_alter_table_sql(src_db, dest_db):
     (added, changed, deleted) = diff(src_db[1], dest_db[1])
     ret = []
 
+    src_db_field_names = [None] + [field[0] for field in src_db[1]]
+    
     for name in added:
-        prev = find_prev_field(src_db[1], name)
+        prev = get_prev_field(src_db_field_names, name)
 
         alt = "ALTER TABLE `%s` ADD COLUMN %s" % (src_db[0], get_field(added[name]))
         if prev is not None:
-            alt += " AFTER `%s`" % prev[0]
+            alt += " AFTER `%s`" % prev
         ret.append(alt + ';')
 
-    key_changed = False
-    prev = None
-    for a in changed:
-        print("", a[0], "\n", a[1])
-    # exit()
+    key_changed = False # Key, index changed flag
+    prev = None # Maybe BUG!!!
+
     for columns in changed:
         a, b = columns
         
@@ -143,36 +124,32 @@ def get_alter_table_sql(src_db, dest_db):
 
     for name in deleted:
         ret.append("ALTER TABLE `%s` DROP COLUMN `%s`;" % (dest_db[0], deleted[name][0]))
+
     return ret
+
+def print_split_line(msg):
+    print('-' * 20, msg, '-' * 20)
 
 """
 a is src_db_args,
 b is dest_db_args
 """
 def diff_db(a, b, c=None):
-
     src_db = db_scheme(a[2], a[0], a[1], a[3], c)
     dest_db = db_scheme(b[2], b[0], b[1], b[3], c)
 
     (added, changed, deleted) = diff(src_db[0], dest_db[0])
 
-    # Added
-    print("-- " * 20)
-    print("-- Tables Added")
+    print_split_line("Tables Added")
     for name in added:
-        print(get_create_table_sql(added[name], src_db[1]))
-        print()
+        print(get_create_table_sql(added[name], src_db[1]), end="\n\n")
 
-    # Changed
-    print("-- " * 20)
-    print("-- Tables changed")
+    print_split_line("Tables changed")
     for dbs in changed:
         for sql in get_alter_table_sql(*dbs):
             print(sql)
 
-    # Removed
-    print("-- " * 20)
-    print("-- Tables removed")
+    print_split_line("Tables removed")
     for name in deleted:
         print("DROP TABLE `%s`;" % name)
 
@@ -198,17 +175,15 @@ def main():
         exit('Invalid arguments')
 
     u = re.compile("(.*):(.*)@(.*)/(.*)")
-    a = u.match(argv[1])
-    b = u.match(argv[2])
+    a, b = u.match(argv[1]), u.match(argv[2])
+    
     if a is None or b is None:
         exit('Invalid arguments')
 
-    table_name_pattern = None
-    if len(argv) > 3: # table name pattern
-        table_name_pattern = argv[3]
+    table_name_pattern = argv[3] if len(argv) > 3 else None
 
-    src_db_args = a.groups()
-    dest_db_args = b.groups()
+    src_db_args, dest_db_args = a.groups(), b.groups()
+
     diff_db(src_db_args, dest_db_args, table_name_pattern)
 
 if __name__ == "__main__":
