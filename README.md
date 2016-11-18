@@ -38,3 +38,5 @@ python datachain.py simplequery.sq
 ```
 python3 mysqldiff.py root:root@localhost/mydb root:123456@192.168.1.101:3307/mydb
 ```
+
+- relations is a tool to reveal tables' relationship 

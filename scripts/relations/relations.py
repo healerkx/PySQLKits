@@ -11,7 +11,7 @@ usage = """
 Usage:
     python3 relations.py <source> [--options]
 
-    source format:
+    <source> format:
         username:password@host[:port]/database
     python3 mysqldiff.py root:root@localhost/mydb
 """
@@ -19,11 +19,12 @@ Usage:
 sub_systems_analysis = True
 
 
-def load_table_extra_info():
-    with open("workspace/school/config.json") as file:
+def load_table_extra_info(db_name):
+    with open("workspace/%s/config.json" % db_name) as file:
         jstr = file.read()
         extra = json.loads(jstr)
         return extra
+    return None
 
 def adjust_id_fields(id_fields, table_name, extra_info):
     """
@@ -84,7 +85,6 @@ def db_scheme(extra_info, server, user, passwd, db):
 def fetch_database_info(extra_info, user, password, server, database):
     return db_scheme(extra_info, server, user, password, database)
 
-
 def calc_tables_relations(tables, id_table_map):
     """
     Calc the tables' relations
@@ -93,11 +93,11 @@ def calc_tables_relations(tables, id_table_map):
         primary_key = table.primary_key[0]
         if primary_key not in id_table_map:
             continue
-        follower_tables = id_table_map[table.primary_key[0]]
+        follower_tables = id_table_map[primary_key]
         for follower_table in follower_tables:
             table.add_follower_table(follower_table)
 
-
+# show all tables' followers and depends
 def print_relations(results):
     for table in results:
         print(table)
@@ -123,9 +123,7 @@ def init_graph_from_relations(results, func):
 
     return graph
 
-def main():
-    # For local test
-    argv = ["", 'root:root@127.0.0.1/school']
+def main(argv):
     if len(argv) < 2:
         print(usage)
         exit('Invalid arguments')
@@ -146,7 +144,7 @@ def main():
     graph = init_graph_from_relations(ret, 'followers')
     Graph.prints(graph)
 
-    paths = graph.all_paths(graph.get_vertex('t_student'), graph.get_vertex('t_attend'))
+    paths = graph.all_paths(graph.get_vertex('t_teacher'), graph.get_vertex('t_attend'))
     count = 0
     for path in paths:
         print('-' * 5, "Way %d" % count, '-' * 5)
@@ -163,6 +161,6 @@ def main():
 
 if __name__ == "__main__":
     """
-
+    TODO: get args from sys.argv
     """
-    main()
+    main(["", 'root:root@127.0.0.1/school'])

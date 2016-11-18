@@ -4,14 +4,6 @@ import MySQLdb
 from sys import argv
 import re
 
-
-def is_table_name_pattern_match(table_name, table_name_reg_pattern):
-    if table_name_reg_pattern is None:
-        return True
-
-    m = table_name_reg_pattern.match(table_name)
-    return m is not None
-
 def db_scheme(server, user, passwd, db, table_name_pattern=None):
     host = server
     port = 3306
@@ -26,10 +18,10 @@ def db_scheme(server, user, passwd, db, table_name_pattern=None):
     ct = db.cursor()
     ct.execute("SHOW TABLES")
 
-    table_name_reg_pattern = re.compile(table_name_pattern) if table_name_pattern else None
+    pattern = re.compile(table_name_pattern) if table_name_pattern else None
 
     for (table,) in ct.fetchall():
-        if not is_table_name_pattern_match(table, table_name_reg_pattern):
+        if pattern and not pattern.match(table):
             continue
         ct.execute("SHOW FULL COLUMNS FROM " + table)
         fields = list(ct.fetchall())
