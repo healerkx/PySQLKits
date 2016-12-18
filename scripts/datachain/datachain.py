@@ -5,8 +5,10 @@ import sys
 import MySQLdb
 
 root_path = dirname(dirname(os.getcwd()))
-require_path = os.path.join(root_path, 'lib\\simplequery')
+require_path = os.path.join(root_path, 'lib/simplequery')
 sys.path.append(require_path)
+
+print(require_path)
 
 from table_data import *
 from simplequery import *

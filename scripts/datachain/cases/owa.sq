@@ -1,0 +1,10 @@
+
+# Func results as args of another Func
+# @today Func returns Python tuple of dates
+
+db = @mysql('localhost', 'root', 'root');
+
+
+r1 = db.open_web_api.hd_hardware_category(status=1);
+@t(r1);
+

@@ -1,0 +1,23 @@
+
+<div>
+    {% for dataset in datasets %}
+        <table>
+            <thead>
+                <tr>
+                {% for field in dataset['fields'] %}
+                <td>{{ field }}</td>
+                {% end %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in dataset['data'] %}
+                    <tr>
+                        {% for cell in entry %}
+                        <td>{{ cell }}</td>
+                        {% end %}
+                    </tr>
+                {% end %}
+            </tbody>
+        </table>
+    {% end %}
+</div>
