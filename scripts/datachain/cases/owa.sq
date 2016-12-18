@@ -6,5 +6,5 @@ db = @mysql('localhost', 'root', 'root');
 
 
 r1 = db.open_web_api.hd_hardware_category(status=1);
-@t(r1);
+@t(r1, r1|status|);
 
