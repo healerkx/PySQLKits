@@ -83,7 +83,7 @@ class Evaluator:
         sym = body[1]
         filters = body[2]
         handle = self.get_val_value(sym_to_str(sym))
-        clone = copy.deepcopy(handle)
+        clone = copy.deepcopy(handle)   # Prevent the origin var from modifying.
         clone.set_filters(filters)
         return clone
 

@@ -125,7 +125,7 @@ def init_graph_from_relations(results, func):
 
 def main():
     # For local test
-    argv = ["", 'root:root@127.0.0.1/school']
+    argv = ["", 'root:root@127.0.0.1/open_web_api']
     if len(argv) < 2:
         print(usage)
         exit('Invalid arguments')
@@ -140,7 +140,7 @@ def main():
     extra_info = load_table_extra_info()
 
     ret, id_table_map, db = fetch_database_info(extra_info, *db_args)
-    
+
     calc_tables_relations(ret, id_table_map)
 
     graph = init_graph_from_relations(ret, 'followers')
@@ -163,6 +163,5 @@ def main():
 
 if __name__ == "__main__":
     """
-
     """
     main()
