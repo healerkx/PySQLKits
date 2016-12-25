@@ -96,5 +96,6 @@ def end_entry(entry_id):
     data, result = query(sql)
     return json.dumps({"result": result})
 
-run(host='localhost', port=7788, reloader=True, debug=True)
+if  __name__ == '__main__':
+    run(host='localhost', port=7788, reloader=True, debug=True)
 
