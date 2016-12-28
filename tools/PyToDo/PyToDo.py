@@ -71,17 +71,20 @@ def entries_range(begin_time, end_time):
 
     return json.dumps(data)
 
+def add_entry(content, time):
+    sql = "insert into td_entry values (null, '%s', 1, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, '%s', '%s');" % (content, time, time)
+    data, result = query(sql)
+    return result
+
 @post('/entry')
 def entry():
-    create_time, update_time = str(datetime.datetime.now()), str(datetime.datetime.now())
+    create_time = str(datetime.datetime.now())
     # Why???
     d = urllib.parse.parse_qs(request.body.read().decode())
     # Why???
     content = d['content'][0].replace("'", "\\'")
 
-    # print(content)
-    sql = "insert into td_entry values (null, '%s', 1, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, '%s', '%s');" % (content, create_time, update_time)
-    data, result = query(sql)
+    result = add_entry(content, create_time)
     return json.dumps({"result": result})
 
 @get('/begin/entry/<entry_id:int>')
