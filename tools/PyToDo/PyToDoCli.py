@@ -7,11 +7,7 @@ from prettytable import PrettyTable
 import PyToDo
 
 
-
 def fetch_today_entries(): 
-    """
-    List today TODO entries in table
-    """
     begin_time_str = str(datetime.date.today())
     end_time_str = str(datetime.date.today() + datetime.timedelta(1))
     entries = PyToDo.fetch_entries(begin_time_str, end_time_str)
@@ -32,7 +28,6 @@ def list_entries():
         elif entry_status == 1:
             end_time = ''
 
-
         tab.add_row([entry['entry_id'], entry['entry_content'], begin_time, end_time])
  
     print(tab)
@@ -40,6 +35,12 @@ def list_entries():
 
 def add_entry(content):
     PyToDo.add_entry(content, str(datetime.datetime.now()))
+
+def start_entry(entry_id):
+    pass
+
+def stop_entry(entry_id):
+    pass
 
 def send_report_login():
     with open('/Users/healer/.todo/config', 'r') as f:
@@ -60,24 +61,23 @@ def send_report_login():
                          verify=False, allow_redirects=False)
     cookie = resp.headers['set-cookie']
     content = str(resp.content, 'utf-8')
-    print(content)
+    # print(content)
     result = json.loads(content)
     if str(result['status']) == '0':
         return (True, cookie)
     return (False, None)
 
 report_template="""
-date[]:2016-12-26 Monday
 proj_level1[]:技术需求（BO）
 proj_level2[]:无编号_BO（主站）
-hour[]:8
-content[]:
+hour[]:9
 desc[]:
 proj_from[]:
 id[]:
 dept1:应用研发中心
 dept2:P端营销研发部
 """
+
 def get_report_post(report):
     lines = report_template.split('\n')
     post = {}
@@ -100,31 +100,29 @@ def send_report():
     contents = []
     for entry in entries:
         contents.append('%d. %s' % (idx, entry['entry_content']))
+        idx += 1
 
     report = '\n'.join(contents)
     result, cookie = send_report_login()
     if not result:
         print("Login failed")
+        exit()
 
     url = 'http://xwork.intra.ffan.com/work/saveAjax.json'
     data = get_report_post(report)
     headers = { "cookie": cookie }
 
-    # print(data)
     response = requests.post(url, data=data, headers=headers, verify=False, allow_redirects=False)
     print(response.content.decode('utf-8'))
-
-def main():
-    pass
 
 def usage():
     return """
 Python TODO list cli 0.1
 Command list:
-      add
-      list
-      report
-    """
+    add
+    list
+    report
+"""
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -137,10 +135,11 @@ if __name__ == '__main__':
     elif command == 'add':
         content = sys.argv[2]
         add_entry(content)
+    elif command == 'start':
+        entry_id = sys.argv[2]
+        start_entry(entry_id)
+    elif command == 'stop':
+        entry_id = sys.argv[2]
+        stop_entry(entry_id)
     elif command == 'report':
         send_report()
-    elif command == 'test':
-        print(datetime.date.today().isoweekday())
-
-
-
