@@ -68,14 +68,14 @@ def send_report_login():
     return (False, None)
 
 report_template="""
-proj_level1[]:技术需求（BO）
-proj_level2[]:无编号_BO（主站）
+proj_level1[]:技术需求
+proj_level2[]:BO V0.1_PC端主站V0.1
 hour[]:9
 desc[]:
 proj_from[]:
 id[]:
-dept1:应用研发中心
-dept2:P端营销研发部
+dept1:软件平台研发中心
+dept2:技术产品研发部
 """
 
 def get_report_post(report):
@@ -143,3 +143,4 @@ if __name__ == '__main__':
         stop_entry(entry_id)
     elif command == 'report':
         send_report()
+
