@@ -1,18 +1,15 @@
 
 import struct
 import time
+import sys
 from mysqldef import *
 from table_map_event import *
 
 BINLOG_FILE_HEADER = b'\xFE\x62\x69\x6E'
-
 BINLOG_EVENT_HEADER_LEN = 19    # (32 + 8 + 32 + 32 + 32 + 16) / 8
 
 
-
 eh = EventHandler()
-
-
 
 """
 """
@@ -404,14 +401,19 @@ class BinlogReader:
 Test main
 """
 if __name__ == '__main__':
-    binlog_file = '/usr/local/var/mysql/mysql_binlog.000001'
+    binlog_file = '/usr/local/var/mysql/bugs/mysql_binlog.000001'
     br = BinlogReader(binlog_file)
+
+    forever = False
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '-f':
+            forever = True
 
     # set a concern event list
     # br.set_concern_events([EventType.TABLE_MAP_EVENT])
  
     # print all handlers registered
     # print(eh.handlers)
-    for e in br.read_all_events():
+    for e in br.read_all_events(forever):
         print(e)
 

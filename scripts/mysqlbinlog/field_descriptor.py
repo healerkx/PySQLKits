@@ -76,6 +76,28 @@ class long_descriptor(base_descriptor):
         i, = struct.unpack('=I', c)
         return i, d
 
+@dh.handle(FieldType.FLOAT)
+class float_descriptor(base_descriptor):
+    def __init__(self, metadata):
+        self.metadata_len = 0
+        
+    def parse(self, data):
+        c = data[0:4]
+        d = data[4:]
+        f, = struct.unpack('<f', c)
+        return f, d
+
+@dh.handle(FieldType.DOUBLE)
+class double_descriptor(base_descriptor):
+    def __init__(self, metadata):
+        self.metadata_len = 0
+        
+    def parse(self, data):
+        c = data[0:8]
+        d = data[8:]
+        f, = struct.unpack('<d', c)
+        return f, d
+
 @dh.handle(FieldType.NEWDECIMAL)
 class decimal_descriptor(base_descriptor):
     def __init__(self, metadata):
