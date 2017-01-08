@@ -1,12 +1,10 @@
 
-
 from prettytable import PrettyTable
 import webbrowser
 import MySQLdb
 from redis import Redis
 from runtime import *
 from evaluator import *
-
 
 
 def dict_to_list(dataset, filters, exec_states):

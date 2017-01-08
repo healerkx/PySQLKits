@@ -76,13 +76,35 @@ class long_descriptor(base_descriptor):
         i, = struct.unpack('=I', c)
         return i, d
 
+@dh.handle(FieldType.FLOAT)
+class float_descriptor(base_descriptor):
+    def __init__(self, metadata):
+        self.metadata_len = 0
+        
+    def parse(self, data):
+        c = data[0:4]
+        d = data[4:]
+        f, = struct.unpack('<f', c)
+        return f, d
+
+@dh.handle(FieldType.DOUBLE)
+class double_descriptor(base_descriptor):
+    def __init__(self, metadata):
+        self.metadata_len = 0
+        
+    def parse(self, data):
+        c = data[0:8]
+        d = data[8:]
+        f, = struct.unpack('<d', c)
+        return f, d
+
 @dh.handle(FieldType.NEWDECIMAL)
 class decimal_descriptor(base_descriptor):
     def __init__(self, metadata):
         self.metadata_len = 2
         self.precision = metadata[0]
         self.decimals =  metadata[1]
-        print(self.precision, self.decimals)
+        print(self.precision, self.decimals) # ? print
 
     """
     https://github.com/wenerme/myfacility/blob/master/binlog/decimal.go
@@ -116,10 +138,10 @@ class decimal_descriptor(base_descriptor):
         else:
             mask = -1
             res = "-"
-        
+
         byte = struct.pack('<B', value ^ 0x80)
         data[0] = BigEndian.uint8(byte)
-        
+
         size = compressed_bytes[comp_integral]
 
         if size > 0:
@@ -132,7 +154,7 @@ class decimal_descriptor(base_descriptor):
             b = data[0:4]
             data = data[4:]
             value = struct.unpack('>i', b)[0] ^ mask
-            
+
             res += '%09d' % value
 
         res += "."
@@ -163,7 +185,7 @@ class datetime_descriptor(base_descriptor):
     # Ref: https://github.com/dropbox/godropbox/blob/master/database/binlog/temporal_fields.go
     def parse(self, data):
         c = data[0:5]
-        
+
         msec = 0
         if self.ms_precision == 1 or self.ms_precision == 2:
             msec = BigEndian.uint8(data[5:6]) * 10000

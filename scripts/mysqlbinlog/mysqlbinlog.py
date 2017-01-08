@@ -1,18 +1,15 @@
 
 import struct
 import time
+import sys
 from mysqldef import *
 from table_map_event import *
 
 BINLOG_FILE_HEADER = b'\xFE\x62\x69\x6E'
-
 BINLOG_EVENT_HEADER_LEN = 19    # (32 + 8 + 32 + 32 + 32 + 16) / 8
 
 
-
 eh = EventHandler()
-
- 
 
 """
 """
@@ -94,7 +91,7 @@ class BinlogReader:
             header = EventHeader(header_info)
             return header
         return None
-    
+
     """
     eh.handle decorate a method to register a handler against an event-type
     """
@@ -146,7 +143,7 @@ class BinlogReader:
     @eh.handle(EventType.FORMAT_DESCRIPTION_EVENT)
     def read_format_description_event(self, header):
         c = self.read_bytes(57)
-        
+
         description = struct.unpack('=H50sIB', c) #
         binlog_version = description[0]
         if binlog_version != 4:
@@ -156,7 +153,7 @@ class BinlogReader:
         create_time = description[2]
         event_header_len = description[3]
         assert(event_header_len == 19)
-        
+
         length_array = self.read_bytes(header.event_len - (57 + 19))
         """
         for length in length_array:
@@ -245,7 +242,7 @@ class BinlogReader:
 
         #print(self.cur_field_discriptors)
         for i in range(0, col_count):
-            
+
             fd = self.cur_field_discriptors[i]
             is_null = null_array[i]
             if not is_null:
@@ -282,7 +279,7 @@ class BinlogReader:
                 # print(c)
                 rw_extra_info_tag, extra_row_len, extra_data = struct.unpack('=BB%ds' % (extra_data_len - 2), c)
                 assert(rw_extra_info_tag == 0)
-        
+
         data_len = header.event_len - BINLOG_EVENT_HEADER_LEN - post_header_len - extra_data_len
 
         data = self.read_bytes(data_len - 4)
@@ -294,8 +291,8 @@ class BinlogReader:
         bmp1_size = int((col_count + 7) / 8)
         bmp2_size = int((col_count + 7) / 8)
         bmp = data[: bmp1_size + bmp2_size]
-        
-        
+
+
         remain = data[bmp1_size:]
         if update:
             remain = data[bmp1_size + bmp2_size:]
@@ -337,9 +334,9 @@ class BinlogReader:
             val += int(b << (int(i) * 8))
             print('-', val)
             i += 1
-        
+
         return val
-    
+
 
     def read_field_length(self, bytes):
         if len(bytes) == 0:
@@ -355,7 +352,7 @@ class BinlogReader:
             size = 3
         elif val == 253:
             size = 4
-        
+
         if len(bytes) < size:
             return -1, 0
         return self.bytes_2_leuint(bytes[1:size]), size
@@ -404,14 +401,19 @@ class BinlogReader:
 Test main
 """
 if __name__ == '__main__':
+    binlog_file = '/usr/local/var/mysql/bugs/mysql_binlog.000001'
+    br = BinlogReader(binlog_file)
 
-    br = BinlogReader('F:\\MySQL\\log\\data.000001')
+    forever = False
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '-f':
+            forever = True
 
     # set a concern event list
     # br.set_concern_events([EventType.TABLE_MAP_EVENT])
-    
+ 
     # print all handlers registered
     # print(eh.handlers)
-    for e in br.read_all_events():
+    for e in br.read_all_events(forever):
         print(e)
-    
+

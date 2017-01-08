@@ -1,0 +1,27 @@
+
+
+<script src="http://libs.baidu.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+<link href="http://libs.baidu.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+
+<div>
+    {% for dataset in datasets %}
+        <table class="table table-striped table-bordered table-hover table-condensed">
+            <thead>
+                <tr>
+                {% for field in dataset['fields'] %}
+                <td>{{ field }}</td>
+                {% end %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in dataset['data'] %}
+                    <tr>
+                        {% for cell in entry %}
+                        <td>{{ cell }}</td>
+                        {% end %}
+                    </tr>
+                {% end %}
+            </tbody>
+        </table>
+    {% end %}
+</div>

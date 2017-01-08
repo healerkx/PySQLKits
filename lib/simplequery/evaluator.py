@@ -1,5 +1,6 @@
 
 import datetime
+import copy
 from runtime import *
 
 def sym_to_str(symbol):
@@ -82,8 +83,9 @@ class Evaluator:
         sym = body[1]
         filters = body[2]
         handle = self.get_val_value(sym_to_str(sym))
-        handle.set_filters(filters)
-        return handle
+        clone = copy.deepcopy(handle)   # Prevent the origin var from modifying.
+        clone.set_filters(filters)
+        return clone
 
     # Get variable value (pattern 'a') as a Handle
     def get_val_value(self, var):
