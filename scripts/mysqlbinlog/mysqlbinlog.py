@@ -239,7 +239,7 @@ class BinlogReader:
             null_array.append(is_null)
         starts = (col_count + 7) // 8
         remain = data[starts:]
-
+        
         #print(self.cur_field_discriptors)
         for i in range(0, col_count):
 
@@ -401,7 +401,7 @@ class BinlogReader:
 Test main
 """
 if __name__ == '__main__':
-    binlog_file = '/usr/local/var/mysql/bugs/mysql_binlog.000001'
+    binlog_file = '/usr/local/var/mysql/bugs/mysql_binlog.TEXT.000001'
     br = BinlogReader(binlog_file)
 
     forever = False

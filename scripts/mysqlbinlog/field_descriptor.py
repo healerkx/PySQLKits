@@ -253,6 +253,23 @@ class char_descriptor(base_descriptor):
         s = struct.unpack('=%ds' % strlen, bytes)
         return s, data[strlen + 1:]
 
+# NOTE: tiny / medium / long blobs don't exist in binlog
+@dh.handle(FieldType.BLOB)
+class blob_descriptor(base_descriptor):
+    def __init__(self, metadata):
+        self.metadata_len = 2
+        self.max_len = 65535
+    
+    def parse(self, data):
+        """
+        TODO: I'm not sure about the max_len property, and 
+        """
+        strlen, = struct.unpack('H', data[0:2])
+        bytes = data[2:2 + strlen]
+        s = struct.unpack('=%ds' % strlen, bytes)
+        return s, data[strlen + 2:]
+        
+
 #----------------------------------------------------------
 """
 """     
