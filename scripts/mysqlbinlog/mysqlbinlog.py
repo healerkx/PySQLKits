@@ -401,7 +401,7 @@ class BinlogReader:
 Test main
 """
 if __name__ == '__main__':
-    binlog_file = '/usr/local/var/mysql/bugs/mysql_binlog.TEXT.000001'
+    binlog_file = '/usr/local/var/mysql/mysql_binlog.000001'
     br = BinlogReader(binlog_file)
 
     forever = False

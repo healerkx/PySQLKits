@@ -55,10 +55,14 @@ def send_report_login():
     # print(username, password)
     url = 'http://xwork.intra.ffan.com/user/check_login.json'
     data = {'userName': username, 'passWord': password}
-    headers = {'Accept': 'application/json, text/javascript, */*; q=0.01', 
+    headers = {'Accept': 'application/json, text/javascript, */*; q=0.01',
+               'Origin': 'http://xwork.intra.ffan.com',
+               'Referer': 'http://xwork.intra.ffan.com/user/login',
+               'X-Requested-With': 'XMLHttpRequest',
                'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'}
     resp = requests.post(url, data=data, headers=headers, 
                          verify=False, allow_redirects=False)
+    # print(resp)
     cookie = resp.headers['set-cookie']
     content = str(resp.content, 'utf-8')
     # print(content)
