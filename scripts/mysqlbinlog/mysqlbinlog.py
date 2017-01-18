@@ -98,7 +98,6 @@ class BinlogReader:
     @eh.handle(EventType.UNKNOWN_EVENT)
     def read_unknown_event(self, header):
         event_len = header.event_len
-        # print(event_len)
         # seek for Unknown type event
         c = self.read_bytes(event_len - BINLOG_EVENT_HEADER_LEN)
         return c
@@ -189,7 +188,7 @@ class BinlogReader:
         metadata = data[size:size + metadata_size]
         data = data[size + metadata_size:]
         # print(data)
-        print("---", metadata_size, metadata)
+        # print("---", metadata_size, metadata)
         nullable_bits_size = (col_count + 7) // 8
         nullable_bits = data[:nullable_bits_size]
 

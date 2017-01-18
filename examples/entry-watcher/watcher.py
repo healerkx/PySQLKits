@@ -1,5 +1,4 @@
 
-
 import os
 import sys
 from os.path import dirname
@@ -8,7 +7,7 @@ from optparse import OptionParser
 root_path = dirname(dirname(os.getcwd()))
 require_path = os.path.join(root_path, 'scripts/mysqlbinlog')
 sys.path.append(require_path)
-print(require_path)
+
 from mysqlbinlog import *
 
 from mysqlbinlog import *
@@ -40,10 +39,12 @@ class WatcherHandler(MySQLRowDataHandler):
 
     @staticmethod
     def match(pattern, name):
-        if pattern == '*':
+        if pattern == '%':
             return True
-        # TODO: How to match the name
-        return True
+        if '%' in pattern:
+            p = pattern.replace('%', '')
+            return p in name
+        return pattern == name
 
     def set_current_table(self, data, header):
         db_name = data[1]
@@ -62,29 +63,38 @@ class WatcherHandler(MySQLRowDataHandler):
     
 
 def watch(db_name_pattern, table_name_pattern, binlog_file):
+    # print(db_name_pattern, table_name_pattern, binlog_file)
+    
     handler = WatcherHandler(db_name_pattern, table_name_pattern)
     
     if os.path.exists(binlog_file):
         br = MySQLRowData(handler, binlog_file)
 
         # set a concern event list
-        br.read_loop(True)    
+        br.read_loop(True)
+    else:
+        print('Invalid binlog file given.')
+        exit()          
 
 
 def main(options, args):
     pattern = options.table_name_pattern
-    db_name_pattern = '*'
+    db_name_pattern = '%'
+    
     if '.' in pattern:  # db name given
         db_name_pattern, table_name_pattern = pattern.split('.')
     else:
         table_name_pattern = pattern
 
     binlog_file = options.binlog_file
+    if not binlog_file:
+        print('No binlog file provided')
+        exit()
+
     watch(db_name_pattern, table_name_pattern, binlog_file)
 
 
 if __name__ == '__main__':
-
     parser = OptionParser()
 
     parser.add_option("-t", "--table", action="store",
@@ -96,15 +106,7 @@ if __name__ == '__main__':
     parser.add_option('-b', '--binlog', action="store",
                     dest="binlog_file", help="Provide read binlog filename")
 
-
-    """
-    If can NOT connect MySQL service, neither nor fetch CREATE TABLE info
-    parser.add_option("-f", "--field", action="store",
-                      dest="field", help="Provide field name")
-    """
-
     options, args = parser.parse_args()
-    print(options)
     main(options, args)
 
 

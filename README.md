@@ -1,10 +1,10 @@
 # PySQLKits
 
 
-### It's a toolkits set for MySQL, implementing in Python 3.5
+### It's a toolkit set for MySQL, implementing in Python 3.5
 
 
-- batchinsert is for generating multi-lines of insert SQL, 
+- batchinsert is for generating insert SQL statements, also support data set having relations. 
 > usage:
 
 ```
@@ -22,16 +22,19 @@ i.set_fields_order(['user_id', 'username', 'age', 'mobile', 'company_id', 'time'
 i.perform(20)
 ```
 
-- datachain is for query from MySQL and Redis with SimpleQuery language (A simple script language I implements with PLY), then render the query results in pretty format.
+- datachain is a tool for query data from MySQL and Redis with SimpleQuery language (A simple script language I implement using PLY), then render the results in pretty tables, in both terminator and browser.
 
 > usage:
 ```
 python datachain.py simplequery.sq
 ```
 
-- mysqlbinlog is a tool to parse MySQL binlog files, yield Row-Events.
-> It's supposed to access the path /examples, I give two examples using mysqlbinlog, One reads the current binlog changes and flush them into Redis. Another is for display an entry's change history.
+- mysqlbinlog is a SDK to parse MySQL binlog files, yield Row-Events.
+> It's supposed to access the path /examples, I give some examples using mysqlbinlog:
 
+> - mysql-redis-sync reads the current binlog changes and flush them into Redis.
+> - entry-traceback shows an entry's change history.
+> - entry-watcher shows the current changing entries in some tables you concern.
 
 - mysqldiff compare two databases for diff, and generating create table, alter table, drop table SQL lines.
 > This script (original version) is from my friend Zhoujing(https://github.com/lexchou), Access, amazing...
@@ -39,4 +42,4 @@ python datachain.py simplequery.sq
 python3 mysqldiff.py root:root@localhost/mydb root:123456@192.168.1.101:3307/mydb
 ```
 
-- relations is a tool to reveal tables' relationship 
+- relations is a tool to reveal tables' relationship, TODO: I want to represent the relation graphically.

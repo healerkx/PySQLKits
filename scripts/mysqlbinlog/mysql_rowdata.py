@@ -45,6 +45,7 @@ class MySQLRowData:
 
         # print all handlers registered
         # print(eh.handlers)
+        # counter = 0 # TODO
         for result in self.reader.read_all_events(forever):
             
             event = result[0]
