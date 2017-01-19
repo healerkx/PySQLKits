@@ -98,7 +98,7 @@ if __name__ == '__main__':
     parser = OptionParser()
 
     parser.add_option("-t", "--table", action="store",
-                    dest="table_name_pattern", help="Provide table name pattern")
+                    dest="table_name_pattern", help="Provide table name pattern, using % as the wildchar")
 
     parser.add_option('-s', '--sleep', action="store",
                     dest="sleep_seconds", help="Provide read binlog file minimal sleep seconds")

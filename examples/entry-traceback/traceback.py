@@ -5,7 +5,7 @@ from os.path import dirname
 from optparse import OptionParser
 
 root_path = dirname(dirname(os.getcwd()))
-require_path = os.path.join(root_path, 'scripts\\mysqlbinlog')
+require_path = os.path.join(root_path, 'scripts/mysqlbinlog')
 sys.path.append(require_path)
 
 from mysqlbinlog import *
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
 
     # 
-    binlog_filename = os.path.join(root_path, 'scripts\\mysqlbinlog\\logs\\traceback\\data.000001')
+    binlog_filename = os.path.join(root_path, 'scripts/mysqlbinlog/logs/traceback/data.000001')
     handler = TracebackHandler(options.table_name, options.field, options.value)
     br = MySQLRowData(handler, binlog_filename)
 

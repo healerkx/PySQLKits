@@ -366,16 +366,26 @@ class BinlogReader:
         xid, _ = struct.unpack('=Q4s', c) #
         return xid
 
+    @staticmethod
+    def get_option(options, option_name, default_value=None):
+        if option_name in options:
+            return options[option_name]
+        return default_value
+
     """
     File event loop
     """
-    def read_all_events(self, forever=False, print_header=False):
+    def read_all_events(self, **options):
+        forever = BinlogReader.get_option(options, 'forever', True)
+        print_header = BinlogReader.get_option(options, 'print_header', False)
+        sleep = BinlogReader.get_option(options, 'sleep', 0.5) 
+
         default_handler = eh.get_handler(EventType.UNKNOWN_EVENT)
         while True:
             header = self.read_event_header()
             if header is None:
                 if forever:
-                    time.sleep(1)
+                    time.sleep(sleep)
                     continue
                 else:
                     break
@@ -403,16 +413,13 @@ if __name__ == '__main__':
     binlog_file = '/usr/local/var/mysql/mysql_binlog.000001'
     br = BinlogReader(binlog_file)
 
-    forever = False
-    if len(sys.argv) > 1:
-        if sys.argv[1] == '-f':
-            forever = True
 
     # set a concern event list
     # br.set_concern_events([EventType.TABLE_MAP_EVENT])
  
     # print all handlers registered
     # print(eh.handlers)
-    for e in br.read_all_events(forever):
+    for e in br.read_all_events(forever=False, print_header=True):
         print(e)
+        print()
 
