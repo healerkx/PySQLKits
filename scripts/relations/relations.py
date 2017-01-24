@@ -3,7 +3,7 @@ import MySQLdb
 from functools import *
 from tableinfo import *
 from sys import argv
-import re
+import os,re
 import json
 from graph import *
 
@@ -20,7 +20,10 @@ sub_systems_analysis = True
 
 
 def load_table_extra_info(db_name):
-    with open("workspace/%s/config.json" % db_name) as file:
+    config_file = "workspace/%s/config.json" % db_name
+    if not os.path.exists(config_file):
+        return None
+    with open(config_file) as file:
         jstr = file.read()
         extra = json.loads(jstr)
         return extra
@@ -29,9 +32,13 @@ def load_table_extra_info(db_name):
 def adjust_id_fields(id_fields, table_name, extra_info):
     """
     config.json provide supplimental relationship between tables.
-    """     
+    """
+    if not extra_info:
+        return id_fields
+
     if table_name not in extra_info["fkMapping"]:
         return id_fields
+
     extra = extra_info["fkMapping"][table_name]
     if len(extra) == 0:
         return id_fields
@@ -125,7 +132,6 @@ def init_graph_from_relations(results, func):
 
 def main(argv):
     # For local test
-    argv = ["", 'root:root@127.0.0.1/open_web_api']
     if len(argv) < 2:
         print(usage)
         exit('Invalid arguments')
@@ -137,7 +143,7 @@ def main(argv):
     a = u.match(argv[1])
     db_args = a.groups()
 
-    extra_info = load_table_extra_info()
+    extra_info = load_table_extra_info(db_args[3])
 
     ret, id_table_map, db = fetch_database_info(extra_info, *db_args)
 
@@ -146,14 +152,16 @@ def main(argv):
     graph = init_graph_from_relations(ret, 'followers')
     Graph.prints(graph)
 
-    paths = graph.all_paths(graph.get_vertex('t_teacher'), graph.get_vertex('t_attend'))
+    paths = graph.all_paths(graph.get_vertex('bo_merchant'),
+                            graph.get_vertex('bo_store_page'))
     count = 0
     for path in paths:
         print('-' * 5, "Way %d" % count, '-' * 5)
         Graph.prints(path)
         count += 1
 
-    path = graph.find_path(graph.get_vertex('t_student'), graph.get_vertex('t_attend'))
+    path = graph.find_path(graph.get_vertex('bo_merchant'),
+                           graph.get_vertex('bo_store_page'))
     Graph.prints(path)
 
     # output the results
@@ -165,5 +173,5 @@ if __name__ == "__main__":
     """
     TODO: get args from sys.argv
     """
-    main(["", 'root:root@127.0.0.1/school'])
+    main(["", 'root:root@127.0.0.1/open_web_api'])
 
