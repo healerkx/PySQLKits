@@ -37,10 +37,10 @@ def add_entry(content):
     PyToDo.add_entry(content, str(datetime.datetime.now()))
 
 def start_entry(entry_id):
-    pass
+    PyToDo.begin_entry(int(entry_id))
 
 def stop_entry(entry_id):
-    pass
+    PyToDo.end_entry(int(entry_id))
 
 def send_report_login():
     with open('/Users/healer/.todo/config', 'r') as f:

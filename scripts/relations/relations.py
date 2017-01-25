@@ -3,7 +3,7 @@ import MySQLdb
 from functools import *
 from tableinfo import *
 from sys import argv
-import os,re
+import os, re
 import json
 from graph import *
 
@@ -130,17 +130,14 @@ def init_graph_from_relations(results, func):
 
     return graph
 
-def main(argv):
+def main(db, other_args):
     # For local test
-    if len(argv) < 2:
-        print(usage)
-        exit('Invalid arguments')
 
-    if '--without-sub-systems-analysis' in argv:
+    if '--without-sub-systems-analysis' in other_args:
         sub_systems_analysis = False
 
     u = re.compile("(.*):(.*)@(.*)/(.*)")
-    a = u.match(argv[1])
+    a = u.match(db)
     db_args = a.groups()
 
     extra_info = load_table_extra_info(db_args[3])
@@ -173,5 +170,11 @@ if __name__ == "__main__":
     """
     TODO: get args from sys.argv
     """
-    main(["", 'root:root@127.0.0.1/open_web_api'])
+    db = '' 
+    if len(argv) < 2:
+        db = 'root:root@127.0.0.1/open_web_api'
+    else:
+        db = argv[1]
+
+    main(db, argv[2:])
 
