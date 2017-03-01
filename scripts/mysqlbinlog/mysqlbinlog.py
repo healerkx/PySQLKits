@@ -26,7 +26,8 @@ class BinlogReader:
     def openfile(self, filename):
         if self.file is not None:
             self.file.close()
-            print(self.current_binlog_file + " closed")
+            print(self.current_binlog_file + " closed\n" + '-' * 80)
+
             self.file = None
 
         self.file = open(filename, 'rb')
@@ -389,7 +390,7 @@ class BinlogReader:
                     continue
                 else:
                     break
-
+            
             if not self.is_concern_event(header.type_code) or self.skip_next:
                 # Skip this event
                 self.skip_next = False

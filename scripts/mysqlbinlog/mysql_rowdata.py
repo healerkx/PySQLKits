@@ -30,6 +30,8 @@ class MySQLRowData:
         
         # set a concern event list
         self.reader.set_concern_events([
+            EventType.STOP_EVENT,
+            EventType.ROTATE_EVENT, 
             EventType.TABLE_MAP_EVENT, 
             EventType.WRITE_ROWS_EVENT2,
             EventType.UPDATE_ROWS_EVENT2, 

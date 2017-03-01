@@ -257,7 +257,9 @@ class char_descriptor(base_descriptor):
 @dh.handle(FieldType.BLOB)
 class blob_descriptor(base_descriptor):
     def __init__(self, metadata):
-        self.metadata_len = 2
+        # 2017-03-01, change mertdata_len from 2 => 0, 
+        # I forget why 2 used?
+        self.metadata_len = 0
         self.max_len = 65535
     
     def parse(self, data):
