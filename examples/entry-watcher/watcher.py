@@ -14,6 +14,11 @@ from mysqlbinlog import *
 from mysql_rowdata import *
 import json
 
+COLOR_RESET       = "\x1b[0m"
+COLOR_RED         = "\x1b[31m"
+COLOR_GREEN       = "\x1b[32m"
+COLOR_YELLOW      = "\x1b[33m"
+COLOR_BOLD_WHITE  = "\x1b[1;37m"
 
 class WatcherHandler(MySQLRowDataHandler):
     def __init__(self, db_name_pattern, table_name_pattern):
@@ -22,19 +27,41 @@ class WatcherHandler(MySQLRowDataHandler):
         self.table_name_pattern = table_name_pattern
 
     def prints(self, header, data):
-        print("[%s] %s" % (header.time(), data))
+        print("%s[%s]%s %s" % (COLOR_BOLD_WHITE, header.time(), COLOR_RESET, data))
+
+    def prints2(self, header, data):
+        print("%s[%s]%s [" % (COLOR_BOLD_WHITE, header.time(), COLOR_RESET), end='')
+        for i in data:
+            if isinstance(i, tuple):
+                print("%s(%s -> %s)%s" % (COLOR_YELLOW, i[0], i[1], COLOR_RESET), end=', ')
+            else:
+                print(i, end=', ')
+        print(']\n')
 
     def insert_data(self, data, header):
-        print('INSERT INTO %s.%s' % (self.current_db_name, self.current_table_name))
+        print('%sINSERT INTO%s %s.%s' % (COLOR_GREEN, COLOR_RESET, self.current_db_name, self.current_table_name))
         self.prints(header, data[0])
 
     def update_data(self, data, header):
-        print('UPDATE %s.%s' % (self.current_db_name, self.current_table_name))
-        self.prints(header, data[0])
-        self.prints(header, data[1])
+        print('%sUPDATE%s %s.%s' % (COLOR_YELLOW, COLOR_RESET, self.current_db_name, self.current_table_name))
+        idx = 0
+        length = min(len(data[0]), len(data[1]))
+        display = []
+        
+        while idx < length:
+            origin = data[0][idx]
+            current = data[1][idx]
+            if origin != current:
+                display.append((origin, current))
+            else:
+                display.append(origin)
+            idx += 1
+                
+        self.prints2(header, display)
+        
 
     def delete_data(self, data, header):
-        print('DELETE FROM %s.%s' % (self.current_db_name, self.current_table_name))
+        print('%sDELETE FROM%s %s.%s' % (COLOR_RED, COLOR_RESET, self.current_db_name, self.current_table_name))
         self.prints(header, data[0])
 
     @staticmethod
