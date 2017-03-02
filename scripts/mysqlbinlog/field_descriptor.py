@@ -104,7 +104,7 @@ class decimal_descriptor(base_descriptor):
         self.metadata_len = 2
         self.precision = metadata[0]
         self.decimals =  metadata[1]
-        print(self.precision, self.decimals) # ? print
+        # print(self.precision, self.decimals)
 
     """
     https://github.com/wenerme/myfacility/blob/master/binlog/decimal.go
@@ -250,7 +250,7 @@ class char_descriptor(base_descriptor):
     def parse(self, data):
         strlen, = struct.unpack('B', data[0:1])
         bytes = data[1:1 + strlen]
-        s = struct.unpack('=%ds' % strlen, bytes)
+        s, = struct.unpack('=%ds' % strlen, bytes)
         return s, data[strlen + 1:]
 
 # NOTE: tiny / medium / long blobs don't exist in binlog
@@ -268,7 +268,7 @@ class blob_descriptor(base_descriptor):
         """
         strlen, = struct.unpack('H', data[0:2])
         bytes = data[2:2 + strlen]
-        s = struct.unpack('=%ds' % strlen, bytes)
+        s, = struct.unpack('=%ds' % strlen, bytes)
         return s, data[strlen + 2:]
         
 
