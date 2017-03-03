@@ -89,7 +89,7 @@ class WatcherHandler(MySQLRowDataHandler):
                 self.reader.skip_next = True
     
 
-def watch(db_name_pattern, table_name_pattern, binlog_file):
+def watch(db_name_pattern, table_name_pattern, binlog_file, options):
     # print(db_name_pattern, table_name_pattern, binlog_file)
     
     handler = WatcherHandler(db_name_pattern, table_name_pattern)
@@ -97,6 +97,10 @@ def watch(db_name_pattern, table_name_pattern, binlog_file):
     if os.path.exists(binlog_file):
         br = MySQLRowData(handler, binlog_file)
 
+        if options.begin_time:
+            print('Read events after %s' % options.begin_time)
+            br.read_after(options.begin_time)
+            
         # set a concern event list
         br.read_loop(True)
     else:
@@ -117,8 +121,8 @@ def main(options, args):
     if not binlog_file:
         print('No binlog file provided')
         exit()
-
-    watch(db_name_pattern, table_name_pattern, binlog_file)
+    
+    watch(db_name_pattern, table_name_pattern, binlog_file, options)
 
 
 if __name__ == '__main__':
@@ -132,6 +136,9 @@ if __name__ == '__main__':
 
     parser.add_option('-b', '--binlog', action="store",
                     dest="binlog_file", help="Provide read binlog filename")
+
+    parser.add_option('-a', '--begin-time', action="store",
+                    dest="begin_time", help="Provide read binlog from time")                    
 
     options, args = parser.parse_args()
     main(options, args)

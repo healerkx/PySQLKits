@@ -404,7 +404,23 @@ class BinlogReader:
             results = handler(self, header)
             yield (header.type_code, results, header)
 
+    def read_after_time(self, begin_time):
+        default_handler = eh.get_handler(EventType.UNKNOWN_EVENT)
+        while True:
+            header = self.read_event_header()
+            if not header:
+                break
+            if header.time() >= begin_time:
+                #Must handle this event after read header, before goto next event.
+                default_handler(self, header)
+                break
+            # Need change to next binlog file
+            if header.type_code == EventType.STOP_EVENT:
+                next_binlog_handler = eh.get_handler(header.type_code)
+                results = next_binlog_handler(self, header)
+                continue
 
+            default_handler(self, header)
 
 
 """
@@ -413,7 +429,6 @@ Test main
 if __name__ == '__main__':
     binlog_file = '/usr/local/var/mysql/mysql_binlog.000001'
     br = BinlogReader(binlog_file)
-
 
     # set a concern event list
     # br.set_concern_events([EventType.TABLE_MAP_EVENT])

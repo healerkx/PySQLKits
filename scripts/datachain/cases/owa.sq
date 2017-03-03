@@ -5,6 +5,8 @@
 db = @mysql('localhost', 'root', 'root');
 
 
-r1 = db.open_web_api.hd_hardware_category(status=1);
-@t(r1, r1|status|);
+r1 = db.open_web_api.bo_app(app_id=argv[0], status=1);
+@p(r1|app_id, app_name, status|);
 
+r2 = db.open_web_api.bo_app_code(app_id=argv[0], status=1);
+@p(r2|code_id, code_version, status|);

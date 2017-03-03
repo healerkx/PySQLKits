@@ -157,8 +157,6 @@ def render(exec_states, handle):
     # Only support File name as a param
     return False
 
-
-
 """
 """
 if __name__ == '__main__':

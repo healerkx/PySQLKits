@@ -42,13 +42,12 @@ class MySQLRowData:
     """
     """
     def read_loop(self, forever):
-                    
         handler = self.handler
 
         # print all handlers registered
         # print(eh.handlers)
         # counter = 0 # TODO
-        for result in self.reader.read_all_events(forever=forever, sleep=0.1):
+        for result in self.reader.read_all_events(forever=forever, sleep=0.5):
             
             event = result[0]
             data = result[1]
@@ -63,3 +62,9 @@ class MySQLRowData:
             elif event == EventType.TABLE_MAP_EVENT:
                 handler.set_current_table(data, header)
 
+    def read_after(self, begin_time):
+        """
+        I prefer read the events before `begin_time`  before invoke read_loop, 
+        otherwise it would take time to compare header.time in read_loop.
+        """
+        self.reader.read_after_time(begin_time)
