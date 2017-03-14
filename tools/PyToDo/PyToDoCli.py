@@ -34,6 +34,7 @@ def list_entries():
 
 
 def add_entry(content):
+    # TODO: content need decode("GBK") when Windows cmd.
     PyToDo.add_entry(content, str(datetime.datetime.now()))
 
 def start_entry(entry_id):
@@ -60,11 +61,15 @@ def send_report_login():
                'Referer': 'http://xwork.intra.ffan.com/user/login',
                'X-Requested-With': 'XMLHttpRequest',
                'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'}
-    resp = requests.post(url, data=data, headers=headers, 
+    session = requests.Session()
+    session.trust_env = False               
+    resp = session.post(url, data=data, headers=headers, 
                          verify=False, allow_redirects=False)
-    # print(resp)
-    cookie = resp.headers['set-cookie']
+    
     content = str(resp.content, 'utf-8')
+    # print(content)
+    cookie = resp.headers['set-cookie']
+    
     # print(content)
     result = json.loads(content)
     if str(result['status']) == '0':
@@ -115,8 +120,9 @@ def send_report():
     url = 'http://xwork.intra.ffan.com/work/saveAjax.json'
     data = get_report_post(report)
     headers = { "cookie": cookie }
-
-    response = requests.post(url, data=data, headers=headers, verify=False, allow_redirects=False)
+    session = requests.Session()
+    session.trust_env = False
+    response = session.post(url, data=data, headers=headers, verify=False, allow_redirects=False)
     print(response.content.decode('utf-8'))
 
 def usage():
