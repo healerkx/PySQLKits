@@ -1,6 +1,7 @@
 
 import struct
 import time
+import os
 import sys
 from mysqldef import *
 from table_map_event import *
@@ -66,6 +67,13 @@ class BinlogReader:
         c = self.read_bytes(length)
         s = c.decode(encoding).strip('\0x')
         return s
+
+    def has_next_binlog_file(self):
+        dot = self.current_binlog_file.rindex('.')
+        next_binlog_id = int(self.current_binlog_file[dot + 1:]) + 1
+        filename = self.current_binlog_file[:dot] + ('.%06d' % next_binlog_id)
+        return os.path.exists(filename)
+        
 
     def open_next_binlog_file(self, filename=None):
         if filename is None:
@@ -385,11 +393,15 @@ class BinlogReader:
         while True:
             header = self.read_event_header()
             if header is None:
-                if forever:
-                    time.sleep(sleep)
+                if self.has_next_binlog_file():
+                    self.open_next_binlog_file()
                     continue
                 else:
-                    break
+                    if forever:
+                        time.sleep(sleep)
+                        continue
+                    else:
+                        break
             
             if not self.is_concern_event(header.type_code) or self.skip_next:
                 # Skip this event
@@ -409,7 +421,14 @@ class BinlogReader:
         while True:
             header = self.read_event_header()
             if not header:
-                break
+                # 如果读到文件End, 可能不会有事件指示Code到下一个binlog文件, 要自己判断
+                if self.has_next_binlog_file():
+                    self.open_next_binlog_file()
+                    continue
+                else:
+                    break
+                    
+
             if header.time() >= begin_time:
                 #Must handle this event after read header, before goto next event.
                 default_handler(self, header)
@@ -427,7 +446,7 @@ class BinlogReader:
 Test main
 """
 if __name__ == '__main__':
-    binlog_file = '/usr/local/var/mysql/mysql_binlog.000001'
+    binlog_file = '/usr/local/var/mysql/mysql_binlog.000005'
     br = BinlogReader(binlog_file)
 
     # set a concern event list
@@ -438,4 +457,5 @@ if __name__ == '__main__':
     for e in br.read_all_events(forever=False, print_header=True):
         print(e)
         print()
+        # exit()
 
