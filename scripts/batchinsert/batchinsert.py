@@ -24,7 +24,11 @@ class ListGenerator(ValueGenerator):
     def __next__(self):
         return random.choice(self.v)
 
+# Related data about
 class RelatedDataSource:
+    """
+    Data source
+    """
     __generators = {}
     __header = None
     __lines = []
@@ -69,6 +73,7 @@ class RelatedDataSource:
     def reset_choice(self):
         self.__choice = None
 
+# Related data Generator
 class RelatedDataGenerator(ValueGenerator):
     field_index = -1
     def __init__(self, related_data_source):
@@ -88,6 +93,7 @@ class RelatedDataGenerator(ValueGenerator):
         # print("V", line, self.field_index, value)
         return value
 
+# Random datetime Generator
 class DatetimeRange(ValueGenerator):
     def initialize(self):
         if 'begin' in self.flags:
@@ -100,9 +106,12 @@ class DatetimeRange(ValueGenerator):
         ts = random.choice(self.values)
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)) 
 
+# int Generator
 class IntegerRange(ValueGenerator):
     values = None
     current = None
+    repeat_times = 0
+    repeat_count = 0
     step = 1
     def adapt(self, values):
         self.values = values
@@ -112,10 +121,19 @@ class IntegerRange(ValueGenerator):
             self.current = self.flags['begin']
         if 'step' in self.flags:
             self.step = self.flags['step']
+        if 'repeat_times' in self.flags:
+            self.repeat_times = self.flags['repeat_times']
 
     def __next__(self):
         if self.values is None:
             self.values = range(self.flags['begin'], self.flags['end'])
+        # Repeat
+        if self.repeat_times > 0 and self.repeat_count < self.repeat_times:
+            self.repeat_count += 1
+            return self.current
+
+        self.repeat_count = 0    
+
         if 'order' in self.flags:
             if self.flags['order'] == 'asc':
                 self.current += self.step
@@ -123,8 +141,53 @@ class IntegerRange(ValueGenerator):
             elif self.flags['order'] == 'desc':
                 self.current -= self.step
                 return self.current
+        
+        self.current = random.choice(self.values)
+        return self.current
 
-        return random.choice(self.values)        
+
+class DependentValue(ValueGenerator):
+    reletive_row_index = 0
+    __field_name = ''
+    field_index = -1
+
+    def initialize(self):
+        if 'reletive_row_index' in self.flags:
+            self.reletive_row_index = self.flags['reletive_row_index']
+            assert(self.reletive_row_index <= 0)
+        if 'field_name' in self.flags:
+            self.__field_name = self.flags['field_name']
+        if 'init_value' in self.flags:
+            self.init_value = self.flags['init_value']
+
+        if 'converter' in self.flags:
+            self.converter = self.flags['converter']
+
+    def set_field_name(self, field_name):
+        self.__field_name = field_name
+
+    def get_field_name(self):
+        return self.__field_name
+
+    def set_field_index(self, field_index):
+        self.field_index = field_index
+    
+    def set_row_data(self, row_data, last_row_data):
+        self.row_data = row_data
+        self.last_row_data = last_row_data
+
+    def __next__(self):
+        if self.reletive_row_index == 0:
+            return self.row_data[self.field_index]
+        elif self.reletive_row_index == -1:
+            if not self.last_row_data:
+                return self.init_value
+            if self.converter:
+                return self.converter(self.last_row_data[self.field_index])
+            else:
+                return self.last_row_data[self.field_index]
+
+
 
 """
 """
@@ -198,25 +261,46 @@ class Insert:
     table_name = None
     options = None
     related_data_source = None
+    last_row = None
     format = 'insert'
 
     def __init__(self, table_name, **options):
         self.table_name = table_name
+        
         self.options = options
+        for field_name, config in self.options.items():
+            if isinstance(config, DependentValue):
+                if config.get_field_name() == '':
+                    config.set_field_name(field_name)
+
         self.fields_order = None
 
     def set_related_data_source(self, related_data_source):
         self.related_data_source = related_data_source
 
     def __generate_insert(self, times, i):
-        f, v = [], []
+        f, v, row_data = [], [], []
         for field in self.fields_order:
             f.append(field)
             generator = self.generators[field]
+            if isinstance(generator, DependentValue):
+                generator.set_row_data(v, self.last_row)
+
             if generator is None:
+                row_data.append(None)
                 v.append("null")
             else:
-                v.append("'%s'" % str(next(generator)))
+                val = next(generator)
+                row_data.append(val)
+                if isinstance(val, str):
+                    v.append("'%s'" % str(val))
+                elif isinstance(val, int) or isinstance(val, float):
+                    v.append("%s" % str(val))
+                else:
+                    v.append(val)
+        
+        self.last_row = row_data
+
         if self.format == 'inserts':
             return "insert into `%s` (%s) values (%s);" % (self.table_name, ", ".join(f), ", ".join(v))
         elif self.format == 'insert':
@@ -259,6 +343,7 @@ class Insert:
 
         self.format = format
         for line in self.generate(times, file):
+            # print(line)
             file.write(line + "\n")
 
         file.close()
@@ -266,6 +351,9 @@ class Insert:
     def get_generator(self, g):
         config = self.options[g]
         if isinstance(config, ValueGenerator):
+            if isinstance(config, DependentValue):
+                config.set_field_index(self.fields_order.index(config.get_field_name()))
+
             return config
         elif isinstance(config, list):
             r = ListGenerator()
@@ -276,7 +364,6 @@ class Insert:
             r.adapt(config)
             return r
         return None
-
 
 
 """
