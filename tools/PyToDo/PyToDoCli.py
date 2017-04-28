@@ -78,7 +78,7 @@ def send_report_login():
 
 report_template="""
 proj_level1[]:技术需求
-proj_level2[]:蓝海P端主站-基础框架
+proj_level2[]:蓝海商家-店铺装修-商品推荐
 hour[]:8
 desc[]:
 proj_from[]:
