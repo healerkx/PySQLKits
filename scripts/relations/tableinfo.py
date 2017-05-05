@@ -15,6 +15,7 @@ class TableInfo:
         self.id_fields = get_id_fields(fields)
         self.depends = {}
         self.followers = []
+        self.extra_info = None
 
     def __add_depend_table(self, field_name, table_info):
         """
@@ -36,3 +37,32 @@ class TableInfo:
 
     def __str__(self):
         return "<table=%s %d / %d >" % (self.table_name, len(self.depends), len(self.followers))
+
+    def set_extra_info(self, extra_info):
+        self.extra_info = extra_info
+
+    def get_id_fields(self, extra=True):
+        """
+        config.json provide supplimental relationship between tables.
+        if extra is True, this method returns id_list + extra_id_list
+        """
+        if not extra:
+            return self.id_fields
+
+        if not self.extra_info:
+            return self.id_fields
+
+        if table_name not in self.extra_info["fkMapping"]:
+            return self.id_fields
+
+        extra_info = self.extra_info["fkMapping"][table_name]
+        if len(extra_info) == 0:
+            return self.id_fields
+        
+        get_field_name = lambda x: (x[x.find('.')+1:],) if '.' in x else (x,)
+        extra_id_fields = []
+        for id_name in extra_info:
+            field_names = extra_info[id_name]
+            extra_id_fields += list(map(get_field_name, field_names))
+
+        return self.id_fields + extra_id_fields

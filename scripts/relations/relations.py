@@ -6,6 +6,7 @@ from sys import argv
 import os, re
 import json
 from graph import *
+from extra import *
 
 usage = """
 Usage:
@@ -13,43 +14,11 @@ Usage:
 
     <source> format:
         username:password@host[:port]/database
-    python3 mysqldiff.py root:root@localhost/mydb
+    python3 relations.py root:root@localhost/mydb
 """
 
 sub_systems_analysis = True
 
-
-def load_table_extra_info(db_name):
-    config_file = "workspace/%s/config.json" % db_name
-    if not os.path.exists(config_file):
-        return None
-    with open(config_file) as file:
-        jstr = file.read()
-        extra = json.loads(jstr)
-        return extra
-    return None
-
-def adjust_id_fields(id_fields, table_name, extra_info):
-    """
-    config.json provide supplimental relationship between tables.
-    """
-    if not extra_info:
-        return id_fields
-
-    if table_name not in extra_info["fkMapping"]:
-        return id_fields
-
-    extra = extra_info["fkMapping"][table_name]
-    if len(extra) == 0:
-        return id_fields
-    
-    get_field_name = lambda x: (x[x.find('.')+1:],) if '.' in x else (x,)
-    for id_name in extra:
-        field_names = extra[id_name]
-        id_fields += list(map(get_field_name, field_names))
-
-    return id_fields
-    
 
 def db_scheme(extra_info, server, user, passwd, db):
     """
@@ -72,9 +41,9 @@ def db_scheme(extra_info, server, user, passwd, db):
         ct.execute("SHOW FULL COLUMNS FROM " + table)
         fields = ct.fetchall()
         table_info = TableInfo(table, fields)
+        table_info.set_extra_info(extra_info)
 
-        id_fields = adjust_id_fields(table_info.id_fields, table, extra_info)
-        # print(table, id_fields)
+        id_fields = table_info.get_id_fields()
 
         for id_field in id_fields:
             id_field_name = id_field[0]
@@ -165,6 +134,10 @@ def main(db, other_args):
     print("*" * 20, "table relations", "*" * 20)
     print_relations(ret)
 
+def read_local_config():
+    with open('relations.conf') as file:
+        return file.readline()
+    return None
 
 if __name__ == "__main__":
     """
@@ -172,7 +145,7 @@ if __name__ == "__main__":
     """
     db = '' 
     if len(argv) < 2:
-        db = 'root:root@127.0.0.1/open_web_api'
+        db = read_local_config()
     else:
         db = argv[1]
 
