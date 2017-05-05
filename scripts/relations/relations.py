@@ -7,6 +7,7 @@ import os, re
 import json
 from graph import *
 from extra import *
+from defines import *
 
 usage = """
 Usage:
@@ -20,9 +21,9 @@ Usage:
 sub_systems_analysis = True
 
 
-def db_scheme(extra_info, server, user, passwd, db):
+def fetch_database_info(extra_info, user, password, server, db):
     """
-
+    Fetch database info and mixin extra info from json config
     """
     host = server
     port = 3306
@@ -30,18 +31,17 @@ def db_scheme(extra_info, server, user, passwd, db):
         host, port = server.split(':')
         port = int(port)
 
-    db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, port=port, charset="utf8")
+    db = MySQLdb.connect(host=host, user=user, passwd=password, db=db, port=port, charset="utf8")
     print("#Reading database scheme")
     ct = db.cursor()
     ct.execute("SHOW TABLES")
 
-    ret = []
+    table_info_list = []
     id_table_map = {} # Stores id-field names => tableInfo mapping
     for (table,) in ct.fetchall():
         ct.execute("SHOW FULL COLUMNS FROM " + table)
         fields = ct.fetchall()
-        table_info = TableInfo(table, fields)
-        table_info.set_extra_info(extra_info)
+        table_info = TableInfo(table, fields, extra_info)
 
         id_fields = table_info.get_id_fields()
 
@@ -52,14 +52,11 @@ def db_scheme(extra_info, server, user, passwd, db):
             else:
                 id_table_map[id_field_name].append(table_info)
 
-        ret.append(table_info)
+        table_info_list.append(table_info)
 
     ct.close()
-    return ret, id_table_map, db
+    return table_info_list, id_table_map, db
 
-
-def fetch_database_info(extra_info, user, password, server, database):
-    return db_scheme(extra_info, server, user, password, database)
 
 def calc_tables_relations(tables, id_table_map):
     """
@@ -72,6 +69,29 @@ def calc_tables_relations(tables, id_table_map):
         follower_tables = id_table_map[primary_key]
         for follower_table in follower_tables:
             table.add_follower_table(follower_table)
+
+def update_logic_foreign_key(table_info, uncertain_id, key):
+    pass            
+
+def query_uncertain_id_fields(table_info_list):
+    """
+    """
+    for table_info in table_info_list:
+        id_fields = table_info.get_id_fields()
+        depends = table_info.depends
+        if len(id_fields) == len(depends):
+            continue
+
+        ids = list(map(lambda x: x[0], id_fields))
+        depends_ids = list(map(lambda x: x[0], depends.keys()))
+        uncertain_ids = set(ids) - set(depends_ids)
+        if len(uncertain_ids) > 0:
+            for uncertain_id in uncertain_ids:
+                print("Could you point out `%s`.`%s` corresponds to which primary key?" 
+                    % (green_text(table_info.table_name), green_text(uncertain_id)))
+                key = input('')
+                if len(key) > 0 and '.' in key:
+                    update_logic_foreign_key(table_info, uncertain_id, key)
 
 # show all tables' followers and depends
 def print_relations(results):
@@ -111,11 +131,17 @@ def main(db, other_args):
 
     extra_info = load_table_extra_info(db_args[3])
 
-    ret, id_table_map, db = fetch_database_info(extra_info, *db_args)
+    table_info_list, id_table_map, db = fetch_database_info(extra_info, *db_args)
 
-    calc_tables_relations(ret, id_table_map)
+    calc_tables_relations(table_info_list, id_table_map)
+    try:
+        query_uncertain_id_fields(table_info_list)
+    except KeyboardInterrupt as e:
+        print('Ignore all uncertain foreign keys')
+        pass
+    
 
-    graph = init_graph_from_relations(ret, 'followers')
+    graph = init_graph_from_relations(table_info_list, 'followers')
     Graph.prints(graph)
 
     paths = graph.all_paths(graph.get_vertex('bo_merchant'),
@@ -132,7 +158,7 @@ def main(db, other_args):
 
     # output the results
     print("*" * 20, "table relations", "*" * 20)
-    print_relations(ret)
+    print_relations(table_info_list)
 
 def read_local_config():
     with open('relations.conf') as file:

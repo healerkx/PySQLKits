@@ -1,4 +1,6 @@
 #
+from defines import *
+
 def get_primary_key(table_fields):
     pri = list(filter(lambda x: x[4] == 'PRI',  table_fields))
     return pri[0] if len(pri) > 0 else None
@@ -8,14 +10,14 @@ def get_id_fields(table_fields):
 
 class TableInfo:
 
-    def __init__(self, table_name, fields):
+    def __init__(self, table_name, fields, extra_info=None):
         self.table_name = table_name
         self.fields = fields
         self.primary_key = get_primary_key(fields)
         self.id_fields = get_id_fields(fields)
         self.depends = {}
         self.followers = []
-        self.extra_info = None
+        self.extra_info = extra_info
 
     def __add_depend_table(self, field_name, table_info):
         """
@@ -36,7 +38,7 @@ class TableInfo:
         table_info.__add_depend_table(self.primary_key, self)
 
     def __str__(self):
-        return "<table=%s %d / %d >" % (self.table_name, len(self.depends), len(self.followers))
+        return "%s[%s]%s %d / %d >" % (COLOR_GREEN, self.table_name, COLOR_RESET, len(self.depends), len(self.followers))
 
     def set_extra_info(self, extra_info):
         self.extra_info = extra_info
