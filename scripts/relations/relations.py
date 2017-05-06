@@ -70,8 +70,21 @@ def calc_tables_relations(tables, id_table_map):
         for follower_table in follower_tables:
             table.add_follower_table(follower_table)
 
-def update_logic_foreign_key(table_info, uncertain_id, key):
-    pass            
+def update_logic_foreign_key(table_info_list, table_info, uncertain_id, keys):
+    keys = keys.split(',')
+    for key in keys:
+        key = key.strip()
+        table_name, field_name = key.split(".")
+        if table_name not in map(lambda x: x.table_name, table_info_list):
+            raise Exception("Table `%s` not found" % red_text(table_name))
+        this_table_info = list(filter(lambda x: x.table_name==table_name, table_info_list))[0]
+
+        if field_name not in this_table_info.id_fields and field_name != this_table_info.primary_key[0]:
+            raise Exception("Field `%s`.`%s` not found" % (red_text(table_name), red_text(field_name)))
+        
+        # TODO: table_name and field_name is OK
+    
+    return True
 
 def query_uncertain_id_fields(table_info_list):
     """
@@ -84,14 +97,22 @@ def query_uncertain_id_fields(table_info_list):
 
         ids = list(map(lambda x: x[0], id_fields))
         depends_ids = list(map(lambda x: x[0], depends.keys()))
-        uncertain_ids = set(ids) - set(depends_ids)
-        if len(uncertain_ids) > 0:
-            for uncertain_id in uncertain_ids:
+        uncertain_ids = list(set(ids) - set(depends_ids))
+        if len(uncertain_ids) == 0:
+            continue
+        index = 0
+        while index < len(uncertain_ids):
+            uncertain_id = uncertain_ids[index]
+            try:
                 print("Could you point out `%s`.`%s` corresponds to which primary key?" 
                     % (green_text(table_info.table_name), green_text(uncertain_id)))
-                key = input('')
-                if len(key) > 0 and '.' in key:
-                    update_logic_foreign_key(table_info, uncertain_id, key)
+                keys = input('')
+                if len(keys) > 0 and '.' in keys:            
+                    if update_logic_foreign_key(table_info_list, table_info, uncertain_id, keys):
+                        index += 1
+            except Exception as e:
+                print(e)
+            
 
 # show all tables' followers and depends
 def print_relations(results):
@@ -105,7 +126,7 @@ def print_relations(results):
         print("=" * 40, end='\n\n')
 
 
-def init_graph_from_relations(results, func):
+def init_graph_from_relations(results):
     graph = Graph()
     for table in results:
         v = Vertex(table)
@@ -113,7 +134,7 @@ def init_graph_from_relations(results, func):
 
     # connect each Vertex
     for g in graph.vertex_map.values():
-        adjacencies = getattr(g.inner, func)
+        adjacencies = getattr(g.inner, 'followers')
         for a in adjacencies:
             g.add_adjacency(graph.get_vertex(a.table_name))
 
@@ -138,10 +159,9 @@ def main(db, other_args):
         query_uncertain_id_fields(table_info_list)
     except KeyboardInterrupt as e:
         print('Ignore all uncertain foreign keys')
-        pass
     
-
-    graph = init_graph_from_relations(table_info_list, 'followers')
+    # 
+    graph = init_graph_from_relations(table_info_list)
     Graph.prints(graph)
 
     paths = graph.all_paths(graph.get_vertex('bo_merchant'),
