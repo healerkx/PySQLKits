@@ -70,7 +70,7 @@ def calc_tables_relations(tables, id_table_map):
         for follower_table in follower_tables:
             table.add_follower_table(follower_table)
 
-def update_logic_foreign_key(table_info_list, table_info, uncertain_id, keys):
+def update_logic_foreign_key(table_info_list, table_info, uncertain_id, keys, extra):
     keys = keys.split(',')
     for key in keys:
         key = key.strip()
@@ -82,11 +82,13 @@ def update_logic_foreign_key(table_info_list, table_info, uncertain_id, keys):
         if field_name not in this_table_info.id_fields and field_name != this_table_info.primary_key[0]:
             raise Exception("Field `%s`.`%s` not found" % (red_text(table_name), red_text(field_name)))
         
+        extra.set_virtual_foreign_key(table_info, uncertain_id, table_name, field_name)
+        extra.update_table_extra_info()
         # TODO: table_name and field_name is OK
     
     return True
 
-def query_uncertain_id_fields(table_info_list):
+def query_uncertain_id_fields(table_info_list, extra):
     """
     """
     for table_info in table_info_list:
@@ -107,9 +109,16 @@ def query_uncertain_id_fields(table_info_list):
                 print("Could you point out `%s`.`%s` corresponds to which primary key?" 
                     % (green_text(table_info.table_name), green_text(uncertain_id)))
                 keys = input('')
-                if len(keys) > 0 and '.' in keys:            
-                    if update_logic_foreign_key(table_info_list, table_info, uncertain_id, keys):
+                if len(keys) > 0 and '.' in keys:
+                    if update_logic_foreign_key(table_info_list, table_info, uncertain_id, keys, extra):
                         index += 1
+                elif keys == 'i':
+                    # Ignore it this time
+                    index += 1
+                elif keys == 'n':
+                    # It's not an Id.
+                    index += 1
+                    
             except Exception as e:
                 print(e)
             
@@ -150,13 +159,14 @@ def main(db, other_args):
     a = u.match(db)
     db_args = a.groups()
 
-    extra_info = load_table_extra_info(db_args[3])
+    extra = ExtraTableInfo(db_args[3])
+    extra_info = extra.load_table_extra_info()
 
     table_info_list, id_table_map, db = fetch_database_info(extra_info, *db_args)
 
     calc_tables_relations(table_info_list, id_table_map)
     try:
-        query_uncertain_id_fields(table_info_list)
+        query_uncertain_id_fields(table_info_list, extra)
     except KeyboardInterrupt as e:
         print('Ignore all uncertain foreign keys')
     

@@ -54,10 +54,10 @@ class TableInfo:
         if not self.extra_info:
             return self.id_fields
 
-        if table_name not in self.extra_info["fkMapping"]:
+        if self.table_name not in self.extra_info["virtualForeignKeys"]:
             return self.id_fields
 
-        extra_info = self.extra_info["fkMapping"][table_name]
+        extra_info = self.extra_info["virtualForeignKeys"][self.table_name]
         if len(extra_info) == 0:
             return self.id_fields
         

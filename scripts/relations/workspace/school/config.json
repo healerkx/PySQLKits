@@ -1,7 +1,0 @@
-{
-    "fkMapping": {
-        "t_op_log": {
-            "user_id": ["t_student.student_id", "t_teacher.teacher_id"]
-        }
-    }
-}
