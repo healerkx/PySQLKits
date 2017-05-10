@@ -38,7 +38,7 @@ class TableInfo:
         table_info.__add_depend_table(self.primary_key, self)
 
     def __str__(self):
-        return "%s[%s]%s %d / %d >" % (COLOR_GREEN, self.table_name, COLOR_RESET, len(self.depends), len(self.followers))
+        return "<%s[%s]%s %d / %d >" % (COLOR_GREEN, self.table_name, COLOR_RESET, len(self.depends), len(self.followers))
 
     def set_extra_info(self, extra_info):
         self.extra_info = extra_info
@@ -48,23 +48,29 @@ class TableInfo:
         config.json provide supplimental relationship between tables.
         if extra is True, this method returns id_list + extra_id_list
         """
+        id_fields = list(map(lambda x: x[0], self.id_fields))
         if not extra:
-            return self.id_fields
+            return id_fields
 
         if not self.extra_info:
-            return self.id_fields
+            return id_fields
 
         if self.table_name not in self.extra_info["virtualForeignKeys"]:
-            return self.id_fields
+            return id_fields
 
         extra_info = self.extra_info["virtualForeignKeys"][self.table_name]
         if len(extra_info) == 0:
             return self.id_fields
         
-        get_field_name = lambda x: (x[x.find('.')+1:],) if '.' in x else (x,)
+        get_field_name = lambda x: x[x.find('.')+1:] if '.' in x else x
         extra_id_fields = []
+        id_fields_set = set(id_fields)
+        
         for id_name in extra_info:
             field_names = extra_info[id_name]
-            extra_id_fields += list(map(get_field_name, field_names))
+            corresponds = list(map(get_field_name, field_names))
+            extra_id_fields += filter(lambda x: x != '', corresponds)
 
-        return self.id_fields + extra_id_fields
+            id_fields_set -= set([id_name])
+            
+        return list(id_fields_set) + list(extra_id_fields)

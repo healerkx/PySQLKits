@@ -76,6 +76,17 @@ class long_descriptor(base_descriptor):
         i, = struct.unpack('=I', c)
         return i, d
 
+@dh.handle(FieldType.LONGLONG)
+class long_descriptor(base_descriptor):
+    def __init__(self, metadata):
+        self.metadata_len = 0
+
+    def parse(self, data):
+        c = data[0:8]
+        d = data[8:]
+        i, = struct.unpack('=q', c)
+        return i, d
+
 @dh.handle(FieldType.FLOAT)
 class float_descriptor(base_descriptor):
     def __init__(self, metadata):

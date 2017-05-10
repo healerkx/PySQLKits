@@ -8,6 +8,7 @@ import json
 from graph import *
 from extra import *
 from defines import *
+import readline
 
 usage = """
 Usage:
@@ -45,8 +46,7 @@ def fetch_database_info(extra_info, user, password, server, db):
 
         id_fields = table_info.get_id_fields()
 
-        for id_field in id_fields:
-            id_field_name = id_field[0]
+        for id_field_name in id_fields:
             if id_field_name not in id_table_map:
                 id_table_map[id_field_name] = [table_info]
             else:
@@ -84,7 +84,6 @@ def update_logic_foreign_key(table_info_list, table_info, uncertain_id, keys, ex
         
         extra.set_virtual_foreign_key(table_info, uncertain_id, table_name, field_name)
         extra.update_table_extra_info()
-        # TODO: table_name and field_name is OK
     
     return True
 
@@ -96,10 +95,9 @@ def query_uncertain_id_fields(table_info_list, extra):
         depends = table_info.depends
         if len(id_fields) == len(depends):
             continue
-
-        ids = list(map(lambda x: x[0], id_fields))
+        
         depends_ids = list(map(lambda x: x[0], depends.keys()))
-        uncertain_ids = list(set(ids) - set(depends_ids))
+        uncertain_ids = list(set(id_fields) - set(depends_ids))
         if len(uncertain_ids) == 0:
             continue
         index = 0
@@ -118,6 +116,12 @@ def query_uncertain_id_fields(table_info_list, extra):
                 elif keys == 'n':
                     # It's not an Id.
                     index += 1
+                elif keys == 'e':
+                    # The fields means an id from extra system
+                    extra.set_virtual_foreign_key(table_info, uncertain_id, '', '')
+                    extra.update_table_extra_info()
+                    index += 1
+
                     
             except Exception as e:
                 print(e)
@@ -129,9 +133,9 @@ def print_relations(results):
         print(table)
         for f in table.followers:
             print("\t", f)
-        print("\t", '-' * 30)
-        for d in table.depends:
-            print("\t", d)
+        # print("\t", '-' * 30)
+        # for d in table.depends:
+        #     print("\t", d)
         print("=" * 40, end='\n\n')
 
 
