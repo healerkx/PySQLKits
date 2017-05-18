@@ -142,16 +142,40 @@ def print_relations(results):
 def init_graph_from_relations(results):
     graph = Graph()
     for table in results:
-        v = Vertex(table)
-        graph.add_vertex(table.table_name, v)
+        graph.add_vertex(table.table_name, table)
 
-    # connect each Vertex
-    for g in graph.vertex_map.values():
-        adjacencies = getattr(g.inner, 'followers')
-        for a in adjacencies:
-            g.add_adjacency(graph.get_vertex(a.table_name))
-
+    for table in results:
+        for follow in table.followers:
+            graph.add_edge(table.table_name, follow.table_name)
+    
     return graph
+
+
+def plot(graph):
+    from igraph import plot
+    layout = graph.layout("kk")
+    visual_style = {}
+    visual_style["vertex_size"] = 20
+    visual_style["vertex_label_size"] = 30
+    visual_style["vertex_label_dist"] = 2
+    visual_style["vertex_color"] = "white"
+    visual_style["vertex_label_color"] = "blue"
+    visual_style["vertex_label"] = graph.vs["name"]
+    visual_style["edge_width"] = 2
+    visual_style["layout"] = layout
+    visual_style["bbox"] = (1200, 1000)
+    visual_style["margin"] = 100
+    plot(graph, "social_network.png", **visual_style)
+
+def calc_database_table_relations(db_args):
+    extra = ExtraTableInfo(db_args[3])
+    extra_info = extra.load_table_extra_info()
+
+    table_info_list, id_table_map, db = fetch_database_info(extra_info, *db_args)
+
+    calc_tables_relations(table_info_list, id_table_map)
+
+    return table_info_list, extra
 
 def main(db, other_args):
     # For local test
@@ -163,20 +187,17 @@ def main(db, other_args):
     a = u.match(db)
     db_args = a.groups()
 
-    extra = ExtraTableInfo(db_args[3])
-    extra_info = extra.load_table_extra_info()
-
-    table_info_list, id_table_map, db = fetch_database_info(extra_info, *db_args)
-
-    calc_tables_relations(table_info_list, id_table_map)
+    table_info_list, extra = calc_database_table_relations(db_args)
     try:
         query_uncertain_id_fields(table_info_list, extra)
     except KeyboardInterrupt as e:
         print('Ignore all uncertain foreign keys')
-    
-    # 
+        
+    table_info_list, extra = calc_database_table_relations(db_args)
     graph = init_graph_from_relations(table_info_list)
-    Graph.prints(graph)
+    plot(graph)
+    
+    exit()
 
     paths = graph.all_paths(graph.get_vertex('bo_merchant'),
                             graph.get_vertex('bo_store_page'))

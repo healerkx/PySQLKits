@@ -6,6 +6,7 @@ import requests, urllib, json
 from prettytable import PrettyTable
 import PyToDo
 
+proj_level2 = ''
 
 def fetch_today_entries(): 
     begin_time_str = str(datetime.date.today())
@@ -47,12 +48,16 @@ def send_report_login():
     with open('/Users/healer/.todo/config', 'r') as f:
         lines = f.readlines()
     username, password = '', ''
+    global proj_level2
     for line in lines:
         ps = line.split('=')
         if ps[0] == 'username':
             username = ps[1].strip()
         elif ps[0] == 'password':
             password = ps[1].strip()
+        elif ps[0] == 'proj_level2':
+            proj_level2 = ps[1].strip()
+
     # print(username, password)
     url = 'http://xwork.intra.ffan.com/user/check_login.json'
     data = {'userName': username, 'passWord': password}
@@ -78,7 +83,6 @@ def send_report_login():
 
 report_template="""
 proj_level1[]:技术需求
-proj_level2[]:蓝海商家-店铺装修-商品推荐
 hour[]:8
 desc[]:
 proj_from[]:
@@ -97,7 +101,7 @@ def get_report_post(report):
         post[parts[0]] = parts[1]
 
     post['content[]'] = report
-
+    post['proj_level2[]'] = proj_level2
     date = datetime.date.today()
     weekday = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][date.isoweekday()]
     post['date[]'] = '%s %s' % (date, weekday)
