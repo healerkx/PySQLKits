@@ -153,8 +153,8 @@ def init_graph_from_relations(results):
 
 def plot(graph):
     from igraph import plot
-    layout = graph.layout("kk")
-    visual_style = {}
+    layout = graph.layout("circle")
+    visual_style = dict()
     visual_style["vertex_size"] = 20
     visual_style["vertex_label_size"] = 30
     visual_style["vertex_label_dist"] = 2
@@ -197,23 +197,15 @@ def main(db, other_args):
     graph = init_graph_from_relations(table_info_list)
     plot(graph)
     
-    exit()
+    # exit()
 
-    paths = graph.all_paths(graph.get_vertex('bo_merchant'),
-                            graph.get_vertex('bo_store_page'))
-    count = 0
+    paths = graph.all_paths('bo_merchant', 'bo_app')
+    count = 1
     for path in paths:
         print('-' * 5, "Way %d" % count, '-' * 5)
-        Graph.prints(path)
+        graph.prints(path)
         count += 1
 
-    path = graph.find_path(graph.get_vertex('bo_merchant'),
-                           graph.get_vertex('bo_store_page'))
-    Graph.prints(path)
-
-    # output the results
-    print("*" * 20, "table relations", "*" * 20)
-    print_relations(table_info_list)
 
 def read_local_config():
     with open('relations.conf') as file:

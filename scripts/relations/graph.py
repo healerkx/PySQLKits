@@ -2,6 +2,7 @@
 # http://igraph.org/python/doc/tutorial/tutorial.html
 import igraph
 
+
 class Graph(igraph.Graph):
 
     def __init__(self):
@@ -17,6 +18,13 @@ class Graph(igraph.Graph):
     
     def get_vertex(self, name):
         return self.vertex_maps[name]
+
+    def all_paths(self, begin, end):
+        return self.get_all_shortest_paths(begin, end)
+
+    def prints(self, path):
+        way = [self.vs[p]['name'] for p in path]
+        print(' -> '.join(way))
 
 
 if __name__ == '__main__':
