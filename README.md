@@ -30,6 +30,10 @@ python datachain.py simplequery.sq
 ```
 
 - mysqlbinlog is a SDK to parse MySQL binlog files, yield Row-Events.
+
+I have rewrite the binlog parser in Rust. It would be faster and easy to deploy (pip install all the requirements is annoying workload on new servers).
+I would provide python binding to the new parser.
+(https://github.com/healerkx/mysqlbinlog-rs)
 > It's supposed to access the path /examples, I give some examples using mysqlbinlog:
 
 > - mysql-redis-sync reads the current binlog changes and flush them into Redis.
