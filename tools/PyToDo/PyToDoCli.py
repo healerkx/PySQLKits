@@ -88,7 +88,7 @@ desc[]:
 proj_from[]:
 id[]:
 dept1:软件平台研发中心
-dept2:技术产品研发部
+dept2:平台产品研发部
 """
 
 def get_report_post(report):

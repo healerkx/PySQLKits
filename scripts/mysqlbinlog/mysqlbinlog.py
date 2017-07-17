@@ -446,7 +446,7 @@ class BinlogReader:
 Test main
 """
 if __name__ == '__main__':
-    binlog_file = '/usr/local/var/mysql/mysql_binlog.000005'
+    binlog_file = '/Users/healer/mysql_binlog.000002'
     br = BinlogReader(binlog_file)
 
     # set a concern event list

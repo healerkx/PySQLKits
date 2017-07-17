@@ -1,0 +1,14 @@
+{
+  "virtualForeignKeys": {
+    "admin_operation_log": {
+      "object_id": [
+        "bo_app.app_id"
+      ]
+    },
+    "bo_deploy_apply": {
+      "objid": [
+        "bo_app.app_id"
+      ]
+    }
+  }
+}
