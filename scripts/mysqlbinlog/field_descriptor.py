@@ -90,7 +90,7 @@ class long_descriptor(base_descriptor):
 @dh.handle(FieldType.FLOAT)
 class float_descriptor(base_descriptor):
     def __init__(self, metadata):
-        self.metadata_len = 0
+        self.metadata_len = 1
         
     def parse(self, data):
         c = data[0:4]
@@ -101,7 +101,7 @@ class float_descriptor(base_descriptor):
 @dh.handle(FieldType.DOUBLE)
 class double_descriptor(base_descriptor):
     def __init__(self, metadata):
-        self.metadata_len = 0
+        self.metadata_len = 1
         
     def parse(self, data):
         c = data[0:8]
@@ -115,7 +115,6 @@ class decimal_descriptor(base_descriptor):
         self.metadata_len = 2
         self.precision = metadata[0]
         self.decimals =  metadata[1]
-        # print(self.precision, self.decimals)
 
     """
     https://github.com/wenerme/myfacility/blob/master/binlog/decimal.go
