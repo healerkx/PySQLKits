@@ -1,0 +1,1178 @@
+Created by PLY version 3.9 (http://www.dabeaz.com/ply)
+
+Grammar
+
+Rule 0     S' -> statements
+Rule 1     rvalue -> filter
+Rule 2     rvalue -> arrval
+Rule 3     rvalue -> symbol
+Rule 4     rvalue -> func
+Rule 5     rvalue -> list
+Rule 6     rvalue -> INT
+Rule 7     rvalue -> FLOAT
+Rule 8     rvalue -> STR
+Rule 9     symbol -> NAME
+Rule 10    symbol -> symbol DOT NAME
+Rule 11    arrval -> symbol LBRACKET INT RBRACKET
+Rule 12    list_items -> list_items COMMA rvalue
+Rule 13    list_items -> rvalue
+Rule 14    list -> LBRACKET list_items RBRACKET
+Rule 15    filter_item -> NAME
+Rule 16    filter_item -> func
+Rule 17    filter_items -> filter_items COMMA filter_item
+Rule 18    filter_items -> filter_item
+Rule 19    filter -> symbol VLINE filter_items VLINE
+Rule 20    param -> rvalue
+Rule 21    param_list -> param_list COMMA param
+Rule 22    param_list -> param
+Rule 23    params -> LPAREN param_list RPAREN
+Rule 24    params -> LPAREN RPAREN
+Rule 25    condition -> symbol EQU rvalue
+Rule 26    condition -> BUILDIN EQU rvalue
+Rule 27    condition -> symbol GT rvalue
+Rule 28    condition -> symbol LT rvalue
+Rule 29    condition -> symbol GTE rvalue
+Rule 30    condition -> symbol LTE rvalue
+Rule 31    condition_list -> condition_list COMMA condition
+Rule 32    condition_list -> condition
+Rule 33    conditions -> LPAREN condition_list RPAREN
+Rule 34    conditions -> LPAREN RPAREN
+Rule 35    func -> BUILDIN params
+Rule 36    redis_query -> NAME DOT BUILDIN DOT NAME params
+Rule 37    query -> NAME DOT NAME DOT NAME conditions
+Rule 38    statement -> NAME EQU func SEMI
+Rule 39    statement -> NAME EQU query SEMI
+Rule 40    statement -> NAME EQU redis_query SEMI
+Rule 41    statement -> func SEMI
+Rule 42    statement -> query SEMI
+Rule 43    statement -> redis_query SEMI
+Rule 44    statements -> statements statement
+Rule 45    statements -> statement
+
+Terminals, with rules where they appear
+
+BUILDIN              : 26 35 36
+COMMA                : 12 17 21 31
+DOT                  : 10 36 36 37 37
+EQU                  : 25 26 38 39 40
+FLOAT                : 7
+GT                   : 27
+GTE                  : 29
+INT                  : 6 11
+LBRACKET             : 11 14
+LPAREN               : 23 24 33 34
+LT                   : 28
+LTE                  : 30
+NAME                 : 9 10 15 36 36 37 37 37 38 39 40
+RBRACKET             : 11 14
+RPAREN               : 23 24 33 34
+SEMI                 : 38 39 40 41 42 43
+STR                  : 8
+VLINE                : 19 19
+error                : 
+
+Nonterminals, with rules where they appear
+
+arrval               : 2
+condition            : 31 32
+condition_list       : 31 33
+conditions           : 37
+filter               : 1
+filter_item          : 17 18
+filter_items         : 17 19
+func                 : 4 16 38 41
+list                 : 5
+list_items           : 12 14
+param                : 21 22
+param_list           : 21 23
+params               : 35 36
+query                : 39 42
+redis_query          : 40 43
+rvalue               : 12 13 20 25 26 27 28 29 30
+statement            : 44 45
+statements           : 44 0
+symbol               : 3 10 11 19 25 27 28 29 30
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . statements
+    (44) statements -> . statements statement
+    (45) statements -> . statement
+    (38) statement -> . NAME EQU func SEMI
+    (39) statement -> . NAME EQU query SEMI
+    (40) statement -> . NAME EQU redis_query SEMI
+    (41) statement -> . func SEMI
+    (42) statement -> . query SEMI
+    (43) statement -> . redis_query SEMI
+    (35) func -> . BUILDIN params
+    (37) query -> . NAME DOT NAME DOT NAME conditions
+    (36) redis_query -> . NAME DOT BUILDIN DOT NAME params
+
+    NAME            shift and go to state 7
+    BUILDIN         shift and go to state 6
+
+    func                           shift and go to state 3
+    statements                     shift and go to state 1
+    redis_query                    shift and go to state 4
+    query                          shift and go to state 5
+    statement                      shift and go to state 2
+
+state 1
+
+    (0) S' -> statements .
+    (44) statements -> statements . statement
+    (38) statement -> . NAME EQU func SEMI
+    (39) statement -> . NAME EQU query SEMI
+    (40) statement -> . NAME EQU redis_query SEMI
+    (41) statement -> . func SEMI
+    (42) statement -> . query SEMI
+    (43) statement -> . redis_query SEMI
+    (35) func -> . BUILDIN params
+    (37) query -> . NAME DOT NAME DOT NAME conditions
+    (36) redis_query -> . NAME DOT BUILDIN DOT NAME params
+
+    NAME            shift and go to state 7
+    BUILDIN         shift and go to state 6
+
+    func                           shift and go to state 3
+    redis_query                    shift and go to state 4
+    query                          shift and go to state 5
+    statement                      shift and go to state 8
+
+state 2
+
+    (45) statements -> statement .
+
+    NAME            reduce using rule 45 (statements -> statement .)
+    BUILDIN         reduce using rule 45 (statements -> statement .)
+    $end            reduce using rule 45 (statements -> statement .)
+
+
+state 3
+
+    (41) statement -> func . SEMI
+
+    SEMI            shift and go to state 9
+
+
+state 4
+
+    (43) statement -> redis_query . SEMI
+
+    SEMI            shift and go to state 10
+
+
+state 5
+
+    (42) statement -> query . SEMI
+
+    SEMI            shift and go to state 11
+
+
+state 6
+
+    (35) func -> BUILDIN . params
+    (23) params -> . LPAREN param_list RPAREN
+    (24) params -> . LPAREN RPAREN
+
+    LPAREN          shift and go to state 12
+
+    params                         shift and go to state 13
+
+state 7
+
+    (38) statement -> NAME . EQU func SEMI
+    (39) statement -> NAME . EQU query SEMI
+    (40) statement -> NAME . EQU redis_query SEMI
+    (37) query -> NAME . DOT NAME DOT NAME conditions
+    (36) redis_query -> NAME . DOT BUILDIN DOT NAME params
+
+    EQU             shift and go to state 14
+    DOT             shift and go to state 15
+
+
+state 8
+
+    (44) statements -> statements statement .
+
+    NAME            reduce using rule 44 (statements -> statements statement .)
+    BUILDIN         reduce using rule 44 (statements -> statements statement .)
+    $end            reduce using rule 44 (statements -> statements statement .)
+
+
+state 9
+
+    (41) statement -> func SEMI .
+
+    NAME            reduce using rule 41 (statement -> func SEMI .)
+    BUILDIN         reduce using rule 41 (statement -> func SEMI .)
+    $end            reduce using rule 41 (statement -> func SEMI .)
+
+
+state 10
+
+    (43) statement -> redis_query SEMI .
+
+    NAME            reduce using rule 43 (statement -> redis_query SEMI .)
+    BUILDIN         reduce using rule 43 (statement -> redis_query SEMI .)
+    $end            reduce using rule 43 (statement -> redis_query SEMI .)
+
+
+state 11
+
+    (42) statement -> query SEMI .
+
+    NAME            reduce using rule 42 (statement -> query SEMI .)
+    BUILDIN         reduce using rule 42 (statement -> query SEMI .)
+    $end            reduce using rule 42 (statement -> query SEMI .)
+
+
+state 12
+
+    (23) params -> LPAREN . param_list RPAREN
+    (24) params -> LPAREN . RPAREN
+    (21) param_list -> . param_list COMMA param
+    (22) param_list -> . param
+    (20) param -> . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    RPAREN          shift and go to state 23
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    param_list                     shift and go to state 25
+    symbol                         shift and go to state 26
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 28
+    list                           shift and go to state 22
+    param                          shift and go to state 29
+    filter                         shift and go to state 21
+
+state 13
+
+    (35) func -> BUILDIN params .
+
+    RPAREN          reduce using rule 35 (func -> BUILDIN params .)
+    COMMA           reduce using rule 35 (func -> BUILDIN params .)
+    SEMI            reduce using rule 35 (func -> BUILDIN params .)
+    RBRACKET        reduce using rule 35 (func -> BUILDIN params .)
+    VLINE           reduce using rule 35 (func -> BUILDIN params .)
+
+
+state 14
+
+    (38) statement -> NAME EQU . func SEMI
+    (39) statement -> NAME EQU . query SEMI
+    (40) statement -> NAME EQU . redis_query SEMI
+    (35) func -> . BUILDIN params
+    (37) query -> . NAME DOT NAME DOT NAME conditions
+    (36) redis_query -> . NAME DOT BUILDIN DOT NAME params
+
+    BUILDIN         shift and go to state 6
+    NAME            shift and go to state 33
+
+    func                           shift and go to state 30
+    query                          shift and go to state 31
+    redis_query                    shift and go to state 32
+
+state 15
+
+    (37) query -> NAME DOT . NAME DOT NAME conditions
+    (36) redis_query -> NAME DOT . BUILDIN DOT NAME params
+
+    NAME            shift and go to state 35
+    BUILDIN         shift and go to state 34
+
+
+state 16
+
+    (6) rvalue -> INT .
+
+    RBRACKET        reduce using rule 6 (rvalue -> INT .)
+    COMMA           reduce using rule 6 (rvalue -> INT .)
+    RPAREN          reduce using rule 6 (rvalue -> INT .)
+
+
+state 17
+
+    (2) rvalue -> arrval .
+
+    RBRACKET        reduce using rule 2 (rvalue -> arrval .)
+    COMMA           reduce using rule 2 (rvalue -> arrval .)
+    RPAREN          reduce using rule 2 (rvalue -> arrval .)
+
+
+state 18
+
+    (8) rvalue -> STR .
+
+    RBRACKET        reduce using rule 8 (rvalue -> STR .)
+    COMMA           reduce using rule 8 (rvalue -> STR .)
+    RPAREN          reduce using rule 8 (rvalue -> STR .)
+
+
+state 19
+
+    (9) symbol -> NAME .
+
+    VLINE           reduce using rule 9 (symbol -> NAME .)
+    LBRACKET        reduce using rule 9 (symbol -> NAME .)
+    DOT             reduce using rule 9 (symbol -> NAME .)
+    RBRACKET        reduce using rule 9 (symbol -> NAME .)
+    COMMA           reduce using rule 9 (symbol -> NAME .)
+    RPAREN          reduce using rule 9 (symbol -> NAME .)
+    EQU             reduce using rule 9 (symbol -> NAME .)
+    GT              reduce using rule 9 (symbol -> NAME .)
+    LT              reduce using rule 9 (symbol -> NAME .)
+    GTE             reduce using rule 9 (symbol -> NAME .)
+    LTE             reduce using rule 9 (symbol -> NAME .)
+
+
+state 20
+
+    (14) list -> LBRACKET . list_items RBRACKET
+    (12) list_items -> . list_items COMMA rvalue
+    (13) list_items -> . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    list_items                     shift and go to state 36
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 37
+    list                           shift and go to state 22
+    symbol                         shift and go to state 26
+    filter                         shift and go to state 21
+
+state 21
+
+    (1) rvalue -> filter .
+
+    RBRACKET        reduce using rule 1 (rvalue -> filter .)
+    COMMA           reduce using rule 1 (rvalue -> filter .)
+    RPAREN          reduce using rule 1 (rvalue -> filter .)
+
+
+state 22
+
+    (5) rvalue -> list .
+
+    RBRACKET        reduce using rule 5 (rvalue -> list .)
+    COMMA           reduce using rule 5 (rvalue -> list .)
+    RPAREN          reduce using rule 5 (rvalue -> list .)
+
+
+state 23
+
+    (24) params -> LPAREN RPAREN .
+
+    SEMI            reduce using rule 24 (params -> LPAREN RPAREN .)
+    RPAREN          reduce using rule 24 (params -> LPAREN RPAREN .)
+    COMMA           reduce using rule 24 (params -> LPAREN RPAREN .)
+    RBRACKET        reduce using rule 24 (params -> LPAREN RPAREN .)
+    VLINE           reduce using rule 24 (params -> LPAREN RPAREN .)
+
+
+state 24
+
+    (4) rvalue -> func .
+
+    RBRACKET        reduce using rule 4 (rvalue -> func .)
+    COMMA           reduce using rule 4 (rvalue -> func .)
+    RPAREN          reduce using rule 4 (rvalue -> func .)
+
+
+state 25
+
+    (23) params -> LPAREN param_list . RPAREN
+    (21) param_list -> param_list . COMMA param
+
+    RPAREN          shift and go to state 39
+    COMMA           shift and go to state 38
+
+
+state 26
+
+    (3) rvalue -> symbol .
+    (19) filter -> symbol . VLINE filter_items VLINE
+    (11) arrval -> symbol . LBRACKET INT RBRACKET
+    (10) symbol -> symbol . DOT NAME
+
+    RBRACKET        reduce using rule 3 (rvalue -> symbol .)
+    COMMA           reduce using rule 3 (rvalue -> symbol .)
+    RPAREN          reduce using rule 3 (rvalue -> symbol .)
+    VLINE           shift and go to state 40
+    LBRACKET        shift and go to state 42
+    DOT             shift and go to state 41
+
+
+state 27
+
+    (7) rvalue -> FLOAT .
+
+    RBRACKET        reduce using rule 7 (rvalue -> FLOAT .)
+    COMMA           reduce using rule 7 (rvalue -> FLOAT .)
+    RPAREN          reduce using rule 7 (rvalue -> FLOAT .)
+
+
+state 28
+
+    (20) param -> rvalue .
+
+    RPAREN          reduce using rule 20 (param -> rvalue .)
+    COMMA           reduce using rule 20 (param -> rvalue .)
+
+
+state 29
+
+    (22) param_list -> param .
+
+    RPAREN          reduce using rule 22 (param_list -> param .)
+    COMMA           reduce using rule 22 (param_list -> param .)
+
+
+state 30
+
+    (38) statement -> NAME EQU func . SEMI
+
+    SEMI            shift and go to state 43
+
+
+state 31
+
+    (39) statement -> NAME EQU query . SEMI
+
+    SEMI            shift and go to state 44
+
+
+state 32
+
+    (40) statement -> NAME EQU redis_query . SEMI
+
+    SEMI            shift and go to state 45
+
+
+state 33
+
+    (37) query -> NAME . DOT NAME DOT NAME conditions
+    (36) redis_query -> NAME . DOT BUILDIN DOT NAME params
+
+    DOT             shift and go to state 15
+
+
+state 34
+
+    (36) redis_query -> NAME DOT BUILDIN . DOT NAME params
+
+    DOT             shift and go to state 46
+
+
+state 35
+
+    (37) query -> NAME DOT NAME . DOT NAME conditions
+
+    DOT             shift and go to state 47
+
+
+state 36
+
+    (14) list -> LBRACKET list_items . RBRACKET
+    (12) list_items -> list_items . COMMA rvalue
+
+    RBRACKET        shift and go to state 48
+    COMMA           shift and go to state 49
+
+
+state 37
+
+    (13) list_items -> rvalue .
+
+    RBRACKET        reduce using rule 13 (list_items -> rvalue .)
+    COMMA           reduce using rule 13 (list_items -> rvalue .)
+
+
+state 38
+
+    (21) param_list -> param_list COMMA . param
+    (20) param -> . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    symbol                         shift and go to state 26
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 28
+    list                           shift and go to state 22
+    param                          shift and go to state 50
+    filter                         shift and go to state 21
+
+state 39
+
+    (23) params -> LPAREN param_list RPAREN .
+
+    SEMI            reduce using rule 23 (params -> LPAREN param_list RPAREN .)
+    RPAREN          reduce using rule 23 (params -> LPAREN param_list RPAREN .)
+    COMMA           reduce using rule 23 (params -> LPAREN param_list RPAREN .)
+    RBRACKET        reduce using rule 23 (params -> LPAREN param_list RPAREN .)
+    VLINE           reduce using rule 23 (params -> LPAREN param_list RPAREN .)
+
+
+state 40
+
+    (19) filter -> symbol VLINE . filter_items VLINE
+    (17) filter_items -> . filter_items COMMA filter_item
+    (18) filter_items -> . filter_item
+    (15) filter_item -> . NAME
+    (16) filter_item -> . func
+    (35) func -> . BUILDIN params
+
+    NAME            shift and go to state 53
+    BUILDIN         shift and go to state 6
+
+    func                           shift and go to state 51
+    filter_items                   shift and go to state 52
+    filter_item                    shift and go to state 54
+
+state 41
+
+    (10) symbol -> symbol DOT . NAME
+
+    NAME            shift and go to state 55
+
+
+state 42
+
+    (11) arrval -> symbol LBRACKET . INT RBRACKET
+
+    INT             shift and go to state 56
+
+
+state 43
+
+    (38) statement -> NAME EQU func SEMI .
+
+    NAME            reduce using rule 38 (statement -> NAME EQU func SEMI .)
+    BUILDIN         reduce using rule 38 (statement -> NAME EQU func SEMI .)
+    $end            reduce using rule 38 (statement -> NAME EQU func SEMI .)
+
+
+state 44
+
+    (39) statement -> NAME EQU query SEMI .
+
+    NAME            reduce using rule 39 (statement -> NAME EQU query SEMI .)
+    BUILDIN         reduce using rule 39 (statement -> NAME EQU query SEMI .)
+    $end            reduce using rule 39 (statement -> NAME EQU query SEMI .)
+
+
+state 45
+
+    (40) statement -> NAME EQU redis_query SEMI .
+
+    NAME            reduce using rule 40 (statement -> NAME EQU redis_query SEMI .)
+    BUILDIN         reduce using rule 40 (statement -> NAME EQU redis_query SEMI .)
+    $end            reduce using rule 40 (statement -> NAME EQU redis_query SEMI .)
+
+
+state 46
+
+    (36) redis_query -> NAME DOT BUILDIN DOT . NAME params
+
+    NAME            shift and go to state 57
+
+
+state 47
+
+    (37) query -> NAME DOT NAME DOT . NAME conditions
+
+    NAME            shift and go to state 58
+
+
+state 48
+
+    (14) list -> LBRACKET list_items RBRACKET .
+
+    RPAREN          reduce using rule 14 (list -> LBRACKET list_items RBRACKET .)
+    COMMA           reduce using rule 14 (list -> LBRACKET list_items RBRACKET .)
+    RBRACKET        reduce using rule 14 (list -> LBRACKET list_items RBRACKET .)
+
+
+state 49
+
+    (12) list_items -> list_items COMMA . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 59
+    list                           shift and go to state 22
+    symbol                         shift and go to state 26
+    filter                         shift and go to state 21
+
+state 50
+
+    (21) param_list -> param_list COMMA param .
+
+    RPAREN          reduce using rule 21 (param_list -> param_list COMMA param .)
+    COMMA           reduce using rule 21 (param_list -> param_list COMMA param .)
+
+
+state 51
+
+    (16) filter_item -> func .
+
+    VLINE           reduce using rule 16 (filter_item -> func .)
+    COMMA           reduce using rule 16 (filter_item -> func .)
+
+
+state 52
+
+    (19) filter -> symbol VLINE filter_items . VLINE
+    (17) filter_items -> filter_items . COMMA filter_item
+
+    VLINE           shift and go to state 60
+    COMMA           shift and go to state 61
+
+
+state 53
+
+    (15) filter_item -> NAME .
+
+    VLINE           reduce using rule 15 (filter_item -> NAME .)
+    COMMA           reduce using rule 15 (filter_item -> NAME .)
+
+
+state 54
+
+    (18) filter_items -> filter_item .
+
+    VLINE           reduce using rule 18 (filter_items -> filter_item .)
+    COMMA           reduce using rule 18 (filter_items -> filter_item .)
+
+
+state 55
+
+    (10) symbol -> symbol DOT NAME .
+
+    VLINE           reduce using rule 10 (symbol -> symbol DOT NAME .)
+    LBRACKET        reduce using rule 10 (symbol -> symbol DOT NAME .)
+    DOT             reduce using rule 10 (symbol -> symbol DOT NAME .)
+    RBRACKET        reduce using rule 10 (symbol -> symbol DOT NAME .)
+    COMMA           reduce using rule 10 (symbol -> symbol DOT NAME .)
+    RPAREN          reduce using rule 10 (symbol -> symbol DOT NAME .)
+    EQU             reduce using rule 10 (symbol -> symbol DOT NAME .)
+    GT              reduce using rule 10 (symbol -> symbol DOT NAME .)
+    LT              reduce using rule 10 (symbol -> symbol DOT NAME .)
+    GTE             reduce using rule 10 (symbol -> symbol DOT NAME .)
+    LTE             reduce using rule 10 (symbol -> symbol DOT NAME .)
+
+
+state 56
+
+    (11) arrval -> symbol LBRACKET INT . RBRACKET
+
+    RBRACKET        shift and go to state 62
+
+
+state 57
+
+    (36) redis_query -> NAME DOT BUILDIN DOT NAME . params
+    (23) params -> . LPAREN param_list RPAREN
+    (24) params -> . LPAREN RPAREN
+
+    LPAREN          shift and go to state 12
+
+    params                         shift and go to state 63
+
+state 58
+
+    (37) query -> NAME DOT NAME DOT NAME . conditions
+    (33) conditions -> . LPAREN condition_list RPAREN
+    (34) conditions -> . LPAREN RPAREN
+
+    LPAREN          shift and go to state 64
+
+    conditions                     shift and go to state 65
+
+state 59
+
+    (12) list_items -> list_items COMMA rvalue .
+
+    RBRACKET        reduce using rule 12 (list_items -> list_items COMMA rvalue .)
+    COMMA           reduce using rule 12 (list_items -> list_items COMMA rvalue .)
+
+
+state 60
+
+    (19) filter -> symbol VLINE filter_items VLINE .
+
+    RPAREN          reduce using rule 19 (filter -> symbol VLINE filter_items VLINE .)
+    COMMA           reduce using rule 19 (filter -> symbol VLINE filter_items VLINE .)
+    RBRACKET        reduce using rule 19 (filter -> symbol VLINE filter_items VLINE .)
+
+
+state 61
+
+    (17) filter_items -> filter_items COMMA . filter_item
+    (15) filter_item -> . NAME
+    (16) filter_item -> . func
+    (35) func -> . BUILDIN params
+
+    NAME            shift and go to state 53
+    BUILDIN         shift and go to state 6
+
+    func                           shift and go to state 51
+    filter_item                    shift and go to state 66
+
+state 62
+
+    (11) arrval -> symbol LBRACKET INT RBRACKET .
+
+    RPAREN          reduce using rule 11 (arrval -> symbol LBRACKET INT RBRACKET .)
+    COMMA           reduce using rule 11 (arrval -> symbol LBRACKET INT RBRACKET .)
+    RBRACKET        reduce using rule 11 (arrval -> symbol LBRACKET INT RBRACKET .)
+
+
+state 63
+
+    (36) redis_query -> NAME DOT BUILDIN DOT NAME params .
+
+    SEMI            reduce using rule 36 (redis_query -> NAME DOT BUILDIN DOT NAME params .)
+
+
+state 64
+
+    (33) conditions -> LPAREN . condition_list RPAREN
+    (34) conditions -> LPAREN . RPAREN
+    (31) condition_list -> . condition_list COMMA condition
+    (32) condition_list -> . condition
+    (25) condition -> . symbol EQU rvalue
+    (26) condition -> . BUILDIN EQU rvalue
+    (27) condition -> . symbol GT rvalue
+    (28) condition -> . symbol LT rvalue
+    (29) condition -> . symbol GTE rvalue
+    (30) condition -> . symbol LTE rvalue
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+
+    RPAREN          shift and go to state 67
+    BUILDIN         shift and go to state 70
+    NAME            shift and go to state 19
+
+    condition                      shift and go to state 69
+    condition_list                 shift and go to state 68
+    symbol                         shift and go to state 71
+
+state 65
+
+    (37) query -> NAME DOT NAME DOT NAME conditions .
+
+    SEMI            reduce using rule 37 (query -> NAME DOT NAME DOT NAME conditions .)
+
+
+state 66
+
+    (17) filter_items -> filter_items COMMA filter_item .
+
+    VLINE           reduce using rule 17 (filter_items -> filter_items COMMA filter_item .)
+    COMMA           reduce using rule 17 (filter_items -> filter_items COMMA filter_item .)
+
+
+state 67
+
+    (34) conditions -> LPAREN RPAREN .
+
+    SEMI            reduce using rule 34 (conditions -> LPAREN RPAREN .)
+
+
+state 68
+
+    (33) conditions -> LPAREN condition_list . RPAREN
+    (31) condition_list -> condition_list . COMMA condition
+
+    RPAREN          shift and go to state 73
+    COMMA           shift and go to state 72
+
+
+state 69
+
+    (32) condition_list -> condition .
+
+    RPAREN          reduce using rule 32 (condition_list -> condition .)
+    COMMA           reduce using rule 32 (condition_list -> condition .)
+
+
+state 70
+
+    (26) condition -> BUILDIN . EQU rvalue
+
+    EQU             shift and go to state 74
+
+
+state 71
+
+    (25) condition -> symbol . EQU rvalue
+    (27) condition -> symbol . GT rvalue
+    (28) condition -> symbol . LT rvalue
+    (29) condition -> symbol . GTE rvalue
+    (30) condition -> symbol . LTE rvalue
+    (10) symbol -> symbol . DOT NAME
+
+    EQU             shift and go to state 75
+    GT              shift and go to state 79
+    LT              shift and go to state 78
+    GTE             shift and go to state 77
+    LTE             shift and go to state 76
+    DOT             shift and go to state 41
+
+
+state 72
+
+    (31) condition_list -> condition_list COMMA . condition
+    (25) condition -> . symbol EQU rvalue
+    (26) condition -> . BUILDIN EQU rvalue
+    (27) condition -> . symbol GT rvalue
+    (28) condition -> . symbol LT rvalue
+    (29) condition -> . symbol GTE rvalue
+    (30) condition -> . symbol LTE rvalue
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+
+    BUILDIN         shift and go to state 70
+    NAME            shift and go to state 19
+
+    condition                      shift and go to state 80
+    symbol                         shift and go to state 71
+
+state 73
+
+    (33) conditions -> LPAREN condition_list RPAREN .
+
+    SEMI            reduce using rule 33 (conditions -> LPAREN condition_list RPAREN .)
+
+
+state 74
+
+    (26) condition -> BUILDIN EQU . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    list                           shift and go to state 22
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 81
+    symbol                         shift and go to state 26
+    filter                         shift and go to state 21
+
+state 75
+
+    (25) condition -> symbol EQU . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    list                           shift and go to state 22
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 82
+    symbol                         shift and go to state 26
+    filter                         shift and go to state 21
+
+state 76
+
+    (30) condition -> symbol LTE . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    list                           shift and go to state 22
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 83
+    symbol                         shift and go to state 26
+    filter                         shift and go to state 21
+
+state 77
+
+    (29) condition -> symbol GTE . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    list                           shift and go to state 22
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 84
+    symbol                         shift and go to state 26
+    filter                         shift and go to state 21
+
+state 78
+
+    (28) condition -> symbol LT . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    list                           shift and go to state 22
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 85
+    symbol                         shift and go to state 26
+    filter                         shift and go to state 21
+
+state 79
+
+    (27) condition -> symbol GT . rvalue
+    (1) rvalue -> . filter
+    (2) rvalue -> . arrval
+    (3) rvalue -> . symbol
+    (4) rvalue -> . func
+    (5) rvalue -> . list
+    (6) rvalue -> . INT
+    (7) rvalue -> . FLOAT
+    (8) rvalue -> . STR
+    (19) filter -> . symbol VLINE filter_items VLINE
+    (11) arrval -> . symbol LBRACKET INT RBRACKET
+    (9) symbol -> . NAME
+    (10) symbol -> . symbol DOT NAME
+    (35) func -> . BUILDIN params
+    (14) list -> . LBRACKET list_items RBRACKET
+
+    INT             shift and go to state 16
+    FLOAT           shift and go to state 27
+    STR             shift and go to state 18
+    NAME            shift and go to state 19
+    BUILDIN         shift and go to state 6
+    LBRACKET        shift and go to state 20
+
+    func                           shift and go to state 24
+    list                           shift and go to state 22
+    arrval                         shift and go to state 17
+    rvalue                         shift and go to state 86
+    symbol                         shift and go to state 26
+    filter                         shift and go to state 21
+
+state 80
+
+    (31) condition_list -> condition_list COMMA condition .
+
+    RPAREN          reduce using rule 31 (condition_list -> condition_list COMMA condition .)
+    COMMA           reduce using rule 31 (condition_list -> condition_list COMMA condition .)
+
+
+state 81
+
+    (26) condition -> BUILDIN EQU rvalue .
+
+    RPAREN          reduce using rule 26 (condition -> BUILDIN EQU rvalue .)
+    COMMA           reduce using rule 26 (condition -> BUILDIN EQU rvalue .)
+
+
+state 82
+
+    (25) condition -> symbol EQU rvalue .
+
+    RPAREN          reduce using rule 25 (condition -> symbol EQU rvalue .)
+    COMMA           reduce using rule 25 (condition -> symbol EQU rvalue .)
+
+
+state 83
+
+    (30) condition -> symbol LTE rvalue .
+
+    RPAREN          reduce using rule 30 (condition -> symbol LTE rvalue .)
+    COMMA           reduce using rule 30 (condition -> symbol LTE rvalue .)
+
+
+state 84
+
+    (29) condition -> symbol GTE rvalue .
+
+    RPAREN          reduce using rule 29 (condition -> symbol GTE rvalue .)
+    COMMA           reduce using rule 29 (condition -> symbol GTE rvalue .)
+
+
+state 85
+
+    (28) condition -> symbol LT rvalue .
+
+    RPAREN          reduce using rule 28 (condition -> symbol LT rvalue .)
+    COMMA           reduce using rule 28 (condition -> symbol LT rvalue .)
+
+
+state 86
+
+    (27) condition -> symbol GT rvalue .
+
+    RPAREN          reduce using rule 27 (condition -> symbol GT rvalue .)
+    COMMA           reduce using rule 27 (condition -> symbol GT rvalue .)
+
