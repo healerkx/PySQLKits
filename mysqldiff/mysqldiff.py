@@ -1,8 +1,8 @@
 # Refer https://github.com/lexchou/utilities/blob/master/db_diff
 
 import MySQLdb
-from sys import argv
-import re
+import re, sys
+from optparse import OptionParser
 
 def db_scheme(server, user, passwd, db, table_name_pattern=None):
     host = server
@@ -71,10 +71,13 @@ def get_prev_field(field_names, name):
     return field_names[field_names.index(name) - 1]
 
 # The 8th col is Privileges, do NOT compare it
-def is_column_different(a, b):
-    return a[0:7] != b[0:7] or a[-1:] != b[-1:]
+def is_column_different(a, b, ignore_comments=False):
+    if ignore_comments:
+        return a[0:7] != b[0:7]
+    else:
+        return a[0:7] != b[0:7] or a[-1:] != b[-1:]
 
-def get_alter_table_sql(src_db, dest_db):
+def get_alter_table_sql(src_db, dest_db, options):
     (added, changed, deleted) = diff(src_db[1], dest_db[1])
     ret = []
 
@@ -91,10 +94,16 @@ def get_alter_table_sql(src_db, dest_db):
     key_changed = False # Key, index changed flag
     prev = None # Maybe BUG!!!
 
+    ignore_comments = False
+    if options.ignore and 'comments' in options.ignore.split(','):
+        ignore_comments = True
+
     for columns in changed:
         a, b = columns
         
-        if is_column_different(a, b):
+        if is_column_different(a, b, ignore_comments):
+            print(a)
+            print(b)
             after = 'AFTER `%s`' % prev if prev else ""
 
             ret.append("ALTER TABLE `%s` CHANGE COLUMN `%s` %s COMMENT '%s' %s;" % (src_db[0], b[0], get_field(a), a[8], after))
@@ -126,7 +135,7 @@ def print_split_line(msg):
 a is src_db_args,
 b is dest_db_args
 """
-def diff_db(a, b, c=None):
+def diff_db(a, b, options, c=None):
     src_db = db_scheme(a[2], a[0], a[1], a[3], c)
     dest_db = db_scheme(b[2], b[0], b[1], b[3], c)
 
@@ -138,7 +147,7 @@ def diff_db(a, b, c=None):
 
     print_split_line("Tables changed")
     for dbs in changed:
-        for sql in get_alter_table_sql(*dbs):
+        for sql in get_alter_table_sql(*dbs, options):
             print(sql)
 
     print_split_line("Tables removed")
@@ -148,35 +157,46 @@ def diff_db(a, b, c=None):
     src_db[1].close()
     dest_db[1].close()
 
-# Main entrypoint
 usage = """
 Usage:
-    python3 mysqldiff.py <source> <destination> [options]
+    python3 mysqldiff.py --source=<source> --dest==<destination> [options]
 
     source, destination format:
         username:password@host[:port]/database
-    python3 mysqldiff.py root:root@localhost/mydb root:123456@192.168.1.101:3307/mydb jk_*
+
+    Examples:
+    python3 mysqldiff.py --source=root:root@localhost/mydb --dest=root:123456@192.168.1.101:3307/mydb
 
 Options:
     table-name-pattern
 """
 
-def main():
-    if len(argv) < 3:
+def main(options, args):
+    if not (options.source and options.dest):
         print(usage)
         exit('Invalid arguments')
 
     u = re.compile("(.*):(.*)@(.*)/(.*)")
-    a, b = u.match(argv[1]), u.match(argv[2])
+    a, b = u.match(options.source), u.match(options.dest)
     
     if a is None or b is None:
         exit('Invalid arguments')
 
-    table_name_pattern = argv[3] if len(argv) > 3 else None
+    table_name_pattern = options.focus
 
     src_db_args, dest_db_args = a.groups(), b.groups()
 
-    diff_db(src_db_args, dest_db_args, table_name_pattern)
+    diff_db(src_db_args, dest_db_args, options, table_name_pattern)
+
 
 if __name__ == "__main__":
-    main()
+    parser = OptionParser()
+
+    parser.add_option("-s", "--source", action="store", dest="source", help="Provide source database")
+    parser.add_option("-d", "--dest", action="store", dest="dest", help="Provide destination database")
+    parser.add_option("-c", "--config", action="store", dest="config", help="Provide config file")    
+    parser.add_option("-f", "--focus", action="store", dest="focus", help="Provide focus tables pattern")
+    parser.add_option("-i", "--ignore", action="store", dest="ignore", help="Provide settings to ignore ")
+    
+    options, args = parser.parse_args()
+    main(options, args)
