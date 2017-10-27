@@ -12,8 +12,12 @@ def db_scheme(server, user, passwd, db, table_name_pattern=None):
         port = int(port)
 
     ret = []
-    db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, port=port, charset="utf8")
-    print("-- Connected to server %s by %s" % (server, user))
+    try:
+        db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, port=port, charset="utf8")
+        print("Server [%s:%d] connected" % (server, port))
+    except:
+        print("Server [%s:%d] failed to connect" % (server, port))
+        exit()
     
     ct = db.cursor()
     ct.execute("SHOW TABLES")
@@ -70,7 +74,7 @@ def get_create_table_sql(table, db):
 def get_prev_field(field_names, name):
     return field_names[field_names.index(name) - 1]
 
-# The 8th col is Privileges, do NOT compare it
+# The 8th col is *Privileges*, do NOT compare it
 def is_column_different(a, b, ignore_comments=False):
     if ignore_comments:
         return a[0:7] != b[0:7]
@@ -83,13 +87,26 @@ def get_alter_table_sql(src_db, dest_db, options):
 
     src_db_field_names = [None] + [field[0] for field in src_db[1]]
     
+    m = dict()
     for name in added:
         prev = get_prev_field(src_db_field_names, name)
-
-        alt = "ALTER TABLE `%s` ADD COLUMN %s" % (src_db[0], get_field(added[name]))
+        new_field = added[name]
+        alt = "ALTER TABLE `%s` ADD COLUMN %s" % (src_db[0], get_field(new_field))
         if prev is not None:
             alt += " AFTER `%s`" % prev
-        ret.append(alt + ';')
+        m[prev] = (alt, new_field[0])
+
+    # Re-order the ADD CULUMNs for dependency
+    dest_db_field_names = [field[0] for field in dest_db[1]]
+    while len(m) > 0:
+        added = []
+        for prev in m:
+            if prev in dest_db_field_names:
+                ret.append(m[prev][0] + ";")
+                dest_db_field_names.append(m[prev][1])
+                added.append(prev)
+        for prev in added:
+            del m[prev]
 
     key_changed = False # Key, index changed flag
     prev = None # Maybe BUG!!!
@@ -197,7 +214,7 @@ if __name__ == "__main__":
     parser.add_option("-p", "--pattern", action="store", dest="pattern", help="Provide table name pattern on focus")
     parser.add_option("-i", "--ignore", action="store", dest="ignore", help="Provide settings to ignore ")
     parser.add_option("-f", "--file", action="store", dest="file", help="Provide filename for output sql")
-    parser.add_option("-h", "--highlight", action="store", dest="highlight", help="Highlights the differences")
+    parser.add_option("-l", "--highlight", action="store", dest="highlight", help="Highlights the differences")
     
     options, args = parser.parse_args()
     main(options, args)
