@@ -102,8 +102,6 @@ def get_alter_table_sql(src_db, dest_db, options):
         a, b = columns
         
         if is_column_different(a, b, ignore_comments):
-            print(a)
-            print(b)
             after = 'AFTER `%s`' % prev if prev else ""
 
             ret.append("ALTER TABLE `%s` CHANGE COLUMN `%s` %s COMMENT '%s' %s;" % (src_db[0], b[0], get_field(a), a[8], after))
@@ -163,6 +161,9 @@ Usage:
 
     source, destination format:
         username:password@host[:port]/database
+    Options:
+    -i --ignore, support comments
+
 
     Examples:
     python3 mysqldiff.py --source=root:root@localhost/mydb --dest=root:123456@192.168.1.101:3307/mydb
@@ -180,13 +181,11 @@ def main(options, args):
     a, b = u.match(options.source), u.match(options.dest)
     
     if a is None or b is None:
-        exit('Invalid arguments')
-
-    table_name_pattern = options.focus
+        exit('Invalid database informations')
 
     src_db_args, dest_db_args = a.groups(), b.groups()
 
-    diff_db(src_db_args, dest_db_args, options, table_name_pattern)
+    diff_db(src_db_args, dest_db_args, options, options.pattern)
 
 
 if __name__ == "__main__":
@@ -195,8 +194,10 @@ if __name__ == "__main__":
     parser.add_option("-s", "--source", action="store", dest="source", help="Provide source database")
     parser.add_option("-d", "--dest", action="store", dest="dest", help="Provide destination database")
     parser.add_option("-c", "--config", action="store", dest="config", help="Provide config file")    
-    parser.add_option("-f", "--focus", action="store", dest="focus", help="Provide focus tables pattern")
+    parser.add_option("-p", "--pattern", action="store", dest="pattern", help="Provide table name pattern on focus")
     parser.add_option("-i", "--ignore", action="store", dest="ignore", help="Provide settings to ignore ")
+    parser.add_option("-f", "--file", action="store", dest="file", help="Provide filename for output sql")
+    parser.add_option("-h", "--highlight", action="store", dest="highlight", help="Highlights the differences")
     
     options, args = parser.parse_args()
     main(options, args)
