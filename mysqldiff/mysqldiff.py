@@ -52,13 +52,15 @@ def diff(a, b):
 
 # get field modify description
 def get_field(field):
+    #print(field)
     ret = "`%s` %s" % (field[0], field[1])
     if field[3] == "NO":
         ret += " NOT NULL"
+
     if field[5] == '':
         ret += " DEFAULT ''"
-    if field[5] == 'None':
-        ret += " DEFAULT ''"
+    elif field[5] is None:
+        ret += " DEFAULT NULL"
     else:
         ret += " DEFAULT '%s'" % field[5]
     return ret
