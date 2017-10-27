@@ -3,7 +3,9 @@ import os
 import json
 
 class ExtraTableInfo:
-
+    '''
+    Extra table info holds virtual foreign keys
+    '''
     def __init__(self, db_name):
         self.db_name = db_name
         self.extra = self.load_table_extra_info()

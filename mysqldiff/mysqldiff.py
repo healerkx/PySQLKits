@@ -1,7 +1,6 @@
 # Refer https://github.com/lexchou/utilities/blob/master/db_diff
 
-import MySQLdb
-import re, sys
+import MySQLdb, re, sys
 from optparse import OptionParser
 
 def db_scheme(server, user, passwd, db, table_name_pattern=None):

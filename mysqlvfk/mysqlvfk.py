@@ -1,18 +1,17 @@
 #
-import MySQLdb
+import MySQLdb, os, re, json
 from functools import *
 from tableinfo import *
 from sys import argv
-import os, re
-import json
 from graph import *
 from extra import *
 from defines import *
 import readline
+from optparse import OptionParser
 
 usage = """
 Usage:
-    python3 relations.py <source> [--options]
+    python3 relations.py --source=<database> [--options]
 
     <source> format:
         username:password@host[:port]/database
@@ -119,7 +118,6 @@ def query_uncertain_id_fields(table_info_list, extra):
                     extra.set_virtual_foreign_key(table_info, uncertain_id, '', '')
                     extra.update_table_extra_info()
                     index += 1
-
                     
             except Exception as e:
                 print(e)
@@ -182,16 +180,19 @@ def main(db, other_args):
     db_args = a.groups()
 
     table_info_list, extra = calc_database_table_relations(db_args)
+    print("Press [i] to ignore this time, [n] means not an id(key), [e] means an id from an external system.")
+    print("")
+
     try:
         query_uncertain_id_fields(table_info_list, extra)
     except KeyboardInterrupt as e:
         print('Ignore all uncertain foreign keys')
-        
+
     table_info_list, extra = calc_database_table_relations(db_args)
     graph = init_graph_from_relations(table_info_list)
     plot(graph)
     
-
+    #
     paths = graph.all_paths('bo_merchant', 'bo_app')
     count = 1
     for path in paths:
@@ -199,21 +200,11 @@ def main(db, other_args):
         graph.prints(path)
         count += 1
 
-
-def read_local_config():
-    with open('relations.conf') as file:
-        return file.readline()
-    return None
-
+#
 if __name__ == "__main__":
-    """
-    TODO: get args from sys.argv
-    """
-    db = '' 
-    if len(argv) < 2:
-        db = read_local_config()
-    else:
-        db = argv[1]
+    parser = OptionParser()
+    parser.add_option("-s", "--source", action="store", dest="source", help="Provide source database")
+    options, args = parser.parse_args()
 
-    main(db, argv[2:])
+    main(options.source, argv[2:])
 
