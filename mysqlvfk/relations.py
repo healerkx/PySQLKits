@@ -19,8 +19,6 @@ Usage:
     python3 relations.py root:root@localhost/mydb
 """
 
-sub_systems_analysis = True
-
 
 def fetch_database_info(extra_info, user, password, server, db):
     """
@@ -179,10 +177,6 @@ def calc_database_table_relations(db_args):
 
 def main(db, other_args):
     # For local test
-
-    if '--without-sub-systems-analysis' in other_args:
-        sub_systems_analysis = False
-
     u = re.compile("(.*):(.*)@(.*)/(.*)")
     a = u.match(db)
     db_args = a.groups()
@@ -197,7 +191,6 @@ def main(db, other_args):
     graph = init_graph_from_relations(table_info_list)
     plot(graph)
     
-    # exit()
 
     paths = graph.all_paths('bo_merchant', 'bo_app')
     count = 1
