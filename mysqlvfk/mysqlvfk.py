@@ -173,10 +173,10 @@ def calc_database_table_relations(db_args):
 
     return table_info_list, extra
 
-def main(db, other_args):
+def main(options, other_args):
     # For local test
     u = re.compile("(.*):(.*)@(.*)/(.*)")
-    a = u.match(db)
+    a = u.match(options.source)
     db_args = a.groups()
 
     table_info_list, extra = calc_database_table_relations(db_args)
@@ -189,22 +189,26 @@ def main(db, other_args):
         print('Ignore all uncertain foreign keys')
 
     table_info_list, extra = calc_database_table_relations(db_args)
-    graph = init_graph_from_relations(table_info_list)
-    plot(graph)
+    if options.graph:
+        graph = init_graph_from_relations(table_info_list)
+        plot(graph)
     
-    #
-    paths = graph.all_paths('bo_merchant', 'bo_app')
-    count = 1
-    for path in paths:
-        print('-' * 5, "Way %d" % count, '-' * 5)
-        graph.prints(path)
-        count += 1
+    if options.way:
+        begin_point, end_point = options.way.split(',')
+        paths = graph.all_paths(begin_point, end_point)
+        count = 1
+        for path in paths:
+            print('-' * 5, "Way %d" % count, '-' * 5)
+            graph.prints(path)
+            count += 1
 
 #
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-s", "--source", action="store", dest="source", help="Provide source database")
+    parser.add_option("-g", "--graph", action="store", dest="graph", help="Render the relations in a graph")
+    parser.add_option("-w", "--way", action="store", dest="way", help="Provide a way from a begin point to the end point")
     options, args = parser.parse_args()
 
-    main(options.source, argv[2:])
+    main(options, argv[2:])
 
