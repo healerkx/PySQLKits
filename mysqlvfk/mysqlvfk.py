@@ -146,8 +146,7 @@ def init_graph_from_relations(results):
     
     return graph
 
-
-def plot(graph):
+def plot(graph, filename="social_network.png"):
     from igraph import plot
     layout = graph.layout("circle")
     visual_style = dict()
@@ -161,7 +160,7 @@ def plot(graph):
     visual_style["layout"] = layout
     visual_style["bbox"] = (1200, 1000)
     visual_style["margin"] = 100
-    plot(graph, "social_network.png", **visual_style)
+    plot(graph, filename, **visual_style)
 
 def calc_database_table_relations(db_args):
     extra = ExtraTableInfo(db_args[3])
@@ -191,7 +190,7 @@ def main(options, other_args):
     table_info_list, extra = calc_database_table_relations(db_args)
     if options.graph:
         graph = init_graph_from_relations(table_info_list)
-        plot(graph)
+        plot(graph, options.graph)
     
     if options.way:
         begin_point, end_point = options.way.split(',')
