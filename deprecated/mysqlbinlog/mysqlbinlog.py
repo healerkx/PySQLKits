@@ -446,6 +446,7 @@ class BinlogReader:
 Test main
 """
 if __name__ == '__main__':
+    b = time.clock()
     binlog_file = '/Users/healer/mysql_binlog.000001'
     br = BinlogReader(binlog_file)
 
@@ -455,7 +456,8 @@ if __name__ == '__main__':
     # print all handlers registered
     # print(eh.handlers)
     for e in br.read_all_events(forever=False, print_header=True):
-        print(e)
+        # print(e)
         print()
         # exit()
-
+    e = time.clock()
+    print(e - b)
