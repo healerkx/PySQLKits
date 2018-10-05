@@ -1,9 +1,15 @@
 # 
 import random
-# pip install python-dateutil
 from dateutil import parser as DateParse
 import time
-import sys
+import pytoml as toml
+import MySQLdb, re, sys
+from optparse import OptionParser
+
+def usage():
+    return """
+    Any
+    """
 
 def unixtime(datestr):
     return int(DateParse.parse(datestr).timestamp())
@@ -365,26 +371,33 @@ class Insert:
             return r
         return None
 
+def perform_config(config, options):
+    pass
+
+def main(options, args):
+    with open(options.config, "rb") as file:
+        config = toml.load(file)
+    if not config:
+        print("Bad toml file")
+        exit()
+    
+    perform(config, options)
 
 """
 """
 if __name__ == '__main__':
 
-    if len(sys.argv) < 2:
-        print(1)
+    parser = OptionParser()
+
+    parser.add_option("-d", "--database", action="store", dest="database", help="Provide destination database")
+    parser.add_option("-c", "--config", action="store", dest="config", help="Provide config file")
+    parser.add_option("-o", "--operate", action="store", dest="operate", help="Provide config operate", default="inserts")    
+    
+    options, args = parser.parse_args()
+    if not options.config:
+        print(usage())
         exit()
-
-    i = Insert('kx_user', 
-        user_id=None,
-        company_id=[2, 3, 5], 
-        username=ChineseName(unique=True), 
-        age=range(20, 90), 
-        mobile=ChinaMobile(),
-        time=DatetimeRange(begin='2015-12-23', end='2016-12-23'),
-        order_id=IntegerRange(begin=100, end=1000, step=2, order='asc'))
-
-    i.set_fields_order(['user_id', 'username', 'age', 'mobile', 'company_id', 'time', 'order_id'])
-    i.perform(20)
+    main(options, args)
 
 
 
