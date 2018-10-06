@@ -2,7 +2,7 @@
 import random
 from dateutil import parser as DateParse
 import time
-import pytoml as toml
+import pytoml
 import MySQLdb, re, sys
 from optparse import OptionParser
 
@@ -151,8 +151,7 @@ class IntegerRange(ValueGenerator):
         self.current = random.choice(self.values)
         return self.current
 
-
-class DependentValue(ValueGenerator):
+class DependsGenerator(ValueGenerator):
     reletive_row_index = 0
     __field_name = ''
     field_index = -1
@@ -263,23 +262,26 @@ class ChinaMobile(ValueGenerator):
 """
 main class for insertion
 """
-class Insert:
-    table_name = None
-    options = None
+class Generator:
+    __table_name = None
+    __config = None
     related_data_source = None
     last_row = None
     format = 'insert'
 
-    def __init__(self, table_name, **options):
-        self.table_name = table_name
-        
-        self.options = options
-        for field_name, config in self.options.items():
-            if isinstance(config, DependentValue):
-                if config.get_field_name() == '':
-                    config.set_field_name(field_name)
+    def __init__(self, config: dict):
+        self.__table_name = config['table']['name']
+        print("table name -> %s" % self.__table_name)
+        self.__config = config
+        for field_info in self.__config['field'].items():
+            field_name = field_info[0]
+            field_config = field_info[1]
+            generator_type = field_config['generator']
+            if generator_type == "dependent":
+                pass
+                #if config.get_field_name() == '':
+                #    config.set_field_name(field_name)
 
-        self.fields_order = None
 
     def set_related_data_source(self, related_data_source):
         self.related_data_source = related_data_source
@@ -316,20 +318,19 @@ class Insert:
             return ','.join(v)
 
     def generate(self, times, file):
-        self.generators = {}
-
-        for g in self.options:
-            self.generators[g] = self.get_generator(g)
-        # set fields order
-        if self.fields_order is None:
-            self.fields_order = []
-            for g in self.options:
-                self.fields_order.append(g)
+        self.__generators = {}
+        
+        field_configs = self.__config['field']
+        for field_name in field_configs:
+            self.__generators[field_name] = self.create_generator(field_name)
 
         if self.format == 'csv':
             file.write(','.join(self.fields_order) + "\n")
         elif self.format == 'insert':
-            insert = "insert into `%s` (%s) values " % (self.table_name, ", ".join(self.fields_order))
+            keys = self.__config['field'].keys()
+            fields_list = map(lambda x: "`%s`" % x, keys)
+            insert = "insert into `%s` (%s) values " % (self.__table_name, ", ".join(fields_list))
+            print("####", insert)
             file.write(insert + "\n")
 
         for i in range(0, times):
@@ -338,8 +339,6 @@ class Insert:
             if self.related_data_source is not None:
                 self.related_data_source.reset_choice()
 
-    def set_fields_order(self, fields_order):
-        self.fields_order = fields_order
 
     def perform(self, times, filename, format='inserts'):
         encoding = 'utf-8'
@@ -354,36 +353,36 @@ class Insert:
 
         file.close()
 
-    def get_generator(self, g):
-        config = self.options[g]
-        if isinstance(config, ValueGenerator):
-            if isinstance(config, DependentValue):
-                config.set_field_index(self.fields_order.index(config.get_field_name()))
-
-            return config
-        elif isinstance(config, list):
-            r = ListGenerator()
-            r.adapt(config)
-            return r
-        elif isinstance(config, range):
-            r =  IntegerRange()
-            r.adapt(config)
-            return r
+    def create_generator(self, field_name):
+        field_config = self.__config['field'][field_name]
+        generator_name = field_config['generator']
+        if generator_name == "depend":
+            g = DependsGenerator()
+        elif generator_name == 'list':
+            g = ListGenerator()
+            g.adapt(config)
+            return g
+        elif generator_name == 'range':
+            g =  IntegerRange()
+            g.adapt(config)
+            return g
         return None
 
-def perform(config, options):
-    for field in config['field']:
-        pass
-        # TODO: 和以前的代码兼容
+def perform(toml: dict, options):
+    toml['times'] = options.times
+    toml['filename'] = options.filename
+    toml['database'] = options.database
+    gen = Generator(toml)
+    gen.perform(options.times, options.filename, "insert")
 
 def main(options, args):
     with open(options.config, "rb") as file:
-        config = toml.load(file)
-    if not config:
+        toml = pytoml.load(file)
+    if not toml:
         print("Bad toml file")
         exit()
-    
-    perform(config, options)
+
+    perform(toml, options)
 
 """
 """
@@ -393,8 +392,10 @@ if __name__ == '__main__':
 
     parser.add_option("-d", "--database", action="store", dest="database", help="Provide destination database")
     parser.add_option("-c", "--config", action="store", dest="config", help="Provide config file")
-    parser.add_option("-o", "--operate", action="store", dest="operate", help="Provide config operate", default="inserts")    
-    
+    parser.add_option("-o", "--operate", action="store", dest="operate", help="Provide config operate", default="inserts")
+    parser.add_option("-t", "--times", action="store", dest="times", help="Provide config times", default="10")
+    parser.add_option("-f", "--filename", action="store", dest="filename", help="Provide config filename", default="insert.sql")
+
     options, args = parser.parse_args()
     if not options.config:
         print(usage())
