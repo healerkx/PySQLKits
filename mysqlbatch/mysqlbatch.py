@@ -14,21 +14,73 @@ def usage():
 def unixtime(datestr):
     return int(DateParse.parse(datestr).timestamp())
 
-# base class
-class ValueGenerator:
-    def __init__(self, **flags):
-        self.flags = flags
-        if hasattr(self, 'initialize'):
-            self.initialize()
+
+g_generator_types = dict()
+g_source_types = dict()
+
+def FieldValueGenerator(**args):
+    generator_name = args['name']
+    if not generator_name:
+        print("FieldValueGenerator MUST have a name")
+        exit()
+    def field_value_generator(clz):
+        class FieldValueGeneratorClass(clz):
+            args = dict()
+            source = None
+
+            def super_initialize(self):
+                self.args = args
+                if hasattr(self, 'initialize'):
+                    self.initialize()
+
+            def set_source(self, source):
+                self.source = source
+
+            def get_source(self):
+                return self.source
+
+            def reset(self):
+                pass
+        g_generator_types[generator_name] = FieldValueGeneratorClass
+        return FieldValueGeneratorClass
+           
+    return field_value_generator
+
+def FieldValueSource(**args):
+    source_name = args['name']
+    if not source_name:
+        print("FieldValueSource MUST have a name")
+        exit()
+    def field_value_source(clz):
+        class FieldValueSourceClass(clz):
+
+            def reset(self):
+                pass
+        g_source_types[source_name] = FieldValueSourceClass
+        return FieldValueGeneratorClass
+           
+    return field_value_generator    
 
 ##########################################
 # Generators
-class ListGenerator(ValueGenerator):
-    def adapt(self, v):
-        self.v = v
+@FieldValueGenerator(name='random')
+class RandomGenerator:
 
     def __next__(self):
-        return random.choice(self.v)
+        return random.choice(self.get_source())
+
+# Generators
+@FieldValueGenerator(name='rolling')
+class RollingGenerator:
+
+    def initialize(self):
+        self.iterator = iter(self.get_source)
+
+    def __next__(self):
+        try:
+            return next(self.iterator)
+        except:
+            self.iterator = iter(self.iterator)
 
 # Related data about
 class RelatedDataSource:
@@ -80,7 +132,8 @@ class RelatedDataSource:
         self.__choice = None
 
 # Related data Generator
-class RelatedDataGenerator(ValueGenerator):
+@FieldValueGenerator(name='related')
+class RelatedDataGenerator:
     field_index = -1
     def __init__(self, related_data_source):
         self.related_data_source = related_data_source
@@ -100,7 +153,8 @@ class RelatedDataGenerator(ValueGenerator):
         return value
 
 # Random datetime Generator
-class DatetimeRange(ValueGenerator):
+@FieldValueGenerator(name='datatime')
+class DatetimeRange:
     def initialize(self):
         if 'begin' in self.flags:
             self.begin = unixtime(self.flags['begin'])
@@ -113,7 +167,8 @@ class DatetimeRange(ValueGenerator):
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)) 
 
 # int Generator
-class IntegerRange(ValueGenerator):
+@FieldValueGenerator(name='intrange')
+class IntegerRange:
     values = None
     current = None
     repeat_times = 0
@@ -151,22 +206,24 @@ class IntegerRange(ValueGenerator):
         self.current = random.choice(self.values)
         return self.current
 
-class DependsGenerator(ValueGenerator):
+@FieldValueGenerator(name='depends')
+class DependsGenerator:
     reletive_row_index = 0
     __field_name = ''
     field_index = -1
 
     def initialize(self):
-        if 'reletive_row_index' in self.flags:
-            self.reletive_row_index = self.flags['reletive_row_index']
+        print(dir(self))
+        if 'reletive_row_index' in self.args:
+            self.reletive_row_index = self.args['reletive_row_index']
             assert(self.reletive_row_index <= 0)
-        if 'field_name' in self.flags:
-            self.__field_name = self.flags['field_name']
-        if 'init_value' in self.flags:
-            self.init_value = self.flags['init_value']
+        if 'field_name' in self.args:
+            self.__field_name = self.args['field_name']
+        if 'init_value' in self.args:
+            self.init_value = self.args['init_value']
 
-        if 'converter' in self.flags:
-            self.converter = self.flags['converter']
+        if 'converter' in self.args:
+            self.converter = self.args['converter']
 
     def set_field_name(self, field_name):
         self.__field_name = field_name
@@ -193,10 +250,8 @@ class DependsGenerator(ValueGenerator):
                 return self.last_row_data[self.field_index]
 
 
-
-"""
-"""
-class EnglishName(ValueGenerator):
+@FieldValueGenerator(name='english.names')
+class EnglishNameGenerator:
     names = None
     def initialize(self):
         self.names = self.load('english_names.txt')
@@ -220,7 +275,8 @@ class EnglishName(ValueGenerator):
 
 """
 """
-class ChineseName(ValueGenerator):
+@FieldValueGenerator(name='chinese.names')
+class ChineseNameGenerator:
     names = None
 
     def initialize(self):
@@ -242,8 +298,8 @@ class ChineseName(ValueGenerator):
             # Resource not enough for unique random
             return "<None>"
 
-
-class ChinaMobile(ValueGenerator):
+@FieldValueGenerator(name='china.mobile')
+class ChinaMobile:
     cache = set()
 
     def __next__(self):
@@ -288,10 +344,14 @@ class Generator:
 
     def __generate_insert(self, times, i):
         f, v, row_data = [], [], []
-        for field in self.fields_order:
+        field_names = self.__config['field'].keys()
+        for field in field_names:
             f.append(field)
-            generator = self.generators[field]
-            if isinstance(generator, DependentValue):
+            generator = self.__generators[field]
+            if not generator:
+                print("!!" * 20)
+            
+            if isinstance(generator, DependsGenerator):
                 generator.set_row_data(v, self.last_row)
 
             if generator is None:
@@ -322,7 +382,10 @@ class Generator:
         
         field_configs = self.__config['field']
         for field_name in field_configs:
-            self.__generators[field_name] = self.create_generator(field_name)
+            print(field_name)
+            generator = self.create_generator(field_name)
+            print(generator)
+            self.__generators[field_name] = generator
 
         if self.format == 'csv':
             file.write(','.join(self.fields_order) + "\n")
@@ -334,7 +397,9 @@ class Generator:
             file.write(insert + "\n")
 
         for i in range(0, times):
-            yield self.__generate_insert(times, i)
+            value = self.__generate_insert(times, i)
+            print("@" * 10, value)
+            yield value
 
             if self.related_data_source is not None:
                 self.related_data_source.reset_choice()
@@ -356,24 +421,37 @@ class Generator:
     def create_generator(self, field_name):
         field_config = self.__config['field'][field_name]
         generator_name = field_config['generator']
-        if generator_name == "depend":
-            g = DependsGenerator()
-        elif generator_name == 'list':
-            g = ListGenerator()
-            g.adapt(config)
-            return g
-        elif generator_name == 'range':
-            g =  IntegerRange()
-            g.adapt(config)
-            return g
-        return None
+        g = None
+        if generator_name not in g_generator_types:
+            print("Not this generator named `%s`" % generator_name)
+            exit()
+
+        generator_type = g_generator_types[generator_name]
+        g = generator_type()
+
+        source = None
+        if 'source' in field_config:
+            source = field_config['source']
+        if 'sourcefile' in field_config:
+            with open(field_config['sourcefile'], 'r', encoding='UTF-8') as file:
+                lines = file.readlines()
+                source = list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), lines)))
+        
+        g.set_source(source)
+        
+        if hasattr(g, 'super_initialize'):
+            g.super_initialize()
+        if hasattr(g, 'initialize'):
+            g.initialize()
+
+        return g
 
 def perform(toml: dict, options):
-    toml['times'] = options.times
+    toml['times'] = int(options.times)
     toml['filename'] = options.filename
     toml['database'] = options.database
     gen = Generator(toml)
-    gen.perform(options.times, options.filename, "insert")
+    gen.perform(int(options.times), options.filename, "insert")
 
 def main(options, args):
     with open(options.config, "rb") as file:
@@ -401,19 +479,5 @@ if __name__ == '__main__':
         print(usage())
         exit()
     main(options, args)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

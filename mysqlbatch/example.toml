@@ -7,14 +7,14 @@ name="user"
 
 [field.username]
 generator="random"
-source="chinese_names.txt"
+sourcefile="chinese_names.txt"
 
 [field.password]
-generator="random"
+generator="depends"
 distribution="random"
-source="apply(1)"
+source=[1, 2, 3]
 
 [field.register_time]
 generator="random"
 distribution="random"
-source="apply(1)"
+source=["1", "2"]
