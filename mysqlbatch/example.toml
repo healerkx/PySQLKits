@@ -1,0 +1,10 @@
+
+
+
+[field.username]
+distribution="random"
+source="chinese_names.txt"
+
+[field.password]
+distribution="random"
+source="apply(1)"

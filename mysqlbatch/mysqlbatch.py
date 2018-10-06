@@ -371,8 +371,10 @@ class Insert:
             return r
         return None
 
-def perform_config(config, options):
-    pass
+def perform(config, options):
+    for field in config['field']:
+        pass
+        # TODO: 和以前的代码兼容
 
 def main(options, args):
     with open(options.config, "rb") as file:
