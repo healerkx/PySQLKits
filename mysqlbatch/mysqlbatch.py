@@ -149,28 +149,6 @@ class RelatedDataSource:
     def reset_choice(self):
         self.__choice = None
 
-# Related data Generator
-@FieldValueGenerator(name='related')
-class RelatedDataGenerator:
-    field_index = -1
-    def __init__(self, related_data_source):
-        self.related_data_source = related_data_source
-
-    def set_field_name(self, field_name):
-        self.field_index = self.related_data_source.get_index(field_name)
-        # print("index:", self.field_index)
-
-    def __next__(self):
-        choice = self.related_data_source.get_choice()
-        if choice is None:
-            choice = random.choice(self.related_data_source.get_lines())
-            self.related_data_source.set_choice(choice)
-        
-        value = choice[self.field_index]
-        # print("V", line, self.field_index, value)
-        return value
-
-
 @FieldValueGenerator(name='depends')
 class DependsGenerator:
     reletive_row_index = 0
@@ -220,20 +198,9 @@ class DependsGenerator:
 
 @FieldValueGenerator(name='china.mobile')
 class ChinaMobileGenerator:
-    # TODO: Make china.mobile as a source?
-    cache = set()
-
     def __next__(self):
         t = str(random.choice([3, 4, 5])) + str(random.randint(0, 9))
         return "1%s%s%s" % (t, random.randint(1000, 9999), random.randint(1000, 9999))
-
-    def __iter__(self):
-        count = 0
-        while True:
-            if count > 10: break
-            count += 1
-            yield next(self)
-
 
 def depends_depth_cmp(x, y) -> int:
     return 0
@@ -417,7 +384,7 @@ if __name__ == '__main__':
     parser.add_option("-d", "--database", action="store", dest="database", help="Provide destination database")
     parser.add_option("-c", "--config", action="store", dest="config", help="Provide config file")
     parser.add_option("-o", "--operate", action="store", dest="operate", help="Provide config operate", default="inserts")
-    parser.add_option("-t", "--times", action="store", dest="times", help="Provide config times", default="10")
+    parser.add_option("-t", "--times", action="store", dest="times", help="Provide config times", default="20")
     parser.add_option("-f", "--filename", action="store", dest="filename", help="Provide config filename", default="insert.sql")
 
     options, args = parser.parse_args()

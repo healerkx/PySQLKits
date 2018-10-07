@@ -4,7 +4,7 @@ import pytoml
 import MySQLdb
 from optparse import OptionParser
 from functools import *
-import random, re, sys, time, hashlib
+import random, re, sys, time, hashlib, base64
 
 g_methods = dict()
 
@@ -22,14 +22,19 @@ def unixtime(datestr):
 
 @method("md5")
 def md5(s):
-    return hashlib.new('md5', str(s).encode("utf8")).hexdigest()    
+    return hashlib.new('md5', str(s).encode("utf8")).hexdigest()
 
 @method("unix_time")
 def unix_time(datestr):
     return unixtime(datestr)
 
-print(unix_time("2018-01-01"))
+@method("base64")
+def base64(s):
+    return base64.b64encode(s)
 
+@method("strlen")
+def strlen(s):
+    return len(str(s))
 
 def identity(x):
     return x
