@@ -3,19 +3,22 @@
 [table]
 name="user2"
 
-
-
 [field.username]
 generator="random"
-sourcefile="chinese_names.txt"
+sourcefile="chinese.names"
 
 [field.password]
 generator="depends"
 source="username"
 
-[field.password2]
-generator="depends"
-source="username"
+[field.mobile]
+generator="china.mobile"
+depends="username"
+
+[field.age]
+generator="random"
+source="range(20, 90)"
+
 
 [field.register_time]
 generator="random"

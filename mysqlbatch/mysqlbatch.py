@@ -257,57 +257,9 @@ class DependsGenerator:
             else:
                 return self.last_row_data[self.field_index]
 
-
-@FieldValueGenerator(name='english.names')
-class EnglishNameGenerator:
-    names = None
-    def initialize(self):
-        self.names = self.load('english_names.txt')
-
-    def load(self, filename):
-        # TODO: load names from a file
-        return ['Albert', 'Bob', 'Helen', 'McDonald', 'Mike', 'Lucy', 'Lily', 'Sophy', 'Chris', 'John']
-
-    def __next__(self):
-        if self.names is None:
-            self.initialize()
-        try:
-            name = random.choice(self.names)
-            if self.flags['unique']:
-                self.names.remove(name)
-            return name            
-        except:
-            # Resource not enough for unique random
-            return "<None>"
-
-
-"""
-"""
-@FieldValueGenerator(name='chinese.names')
-class ChineseNameGenerator:
-    names = None
-
-    def initialize(self):
-        self.names = self.__load('chinese_names.txt')
-
-    def __load(self, filename):
-        with open(filename, 'r', encoding='utf-8') as file:
-            return list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), file.readlines())))
-
-    def __next__(self):
-        if self.names is None:
-            self.initialize()
-        try:
-            name = random.choice(self.names)
-            if self.unique:
-                self.names.remove(name)
-            return name            
-        except:
-            # Resource not enough for unique random
-            return "<None>"
-
 @FieldValueGenerator(name='china.mobile')
-class ChinaMobile:
+class ChinaMobileGenerator:
+    # TODO: Make china.mobile as a source?
     cache = set()
 
     def __next__(self):
@@ -317,11 +269,9 @@ class ChinaMobile:
     def __iter__(self):
         count = 0
         while True:
-            if count > 10:
-                break
+            if count > 10: break
             count += 1
-            v = next(self)
-            yield v
+            yield next(self)
 
 
 def depends_depth_cmp(x, y) -> int:
@@ -367,8 +317,6 @@ class Generator:
         self.related_data_source = related_data_source
 
     def __generate_value(self, times, i, sorted_generator_list):
-        
-        # print(sorted_generators)
         f, v, row_data = [], [], []
         field_names = self.__config['field'].keys()
         for generator in sorted_generator_list:
@@ -411,7 +359,6 @@ class Generator:
         field_configs = self.__config['field']
         for field_name in field_configs:
             generator = self.create_generator(field_name)
-            # print(field_name, generator)
             self.__generators[field_name] = generator
 
         generator_list = list(self.__generators.values())
@@ -419,16 +366,13 @@ class Generator:
             print("BS", generator)
         sorted_generator_list = sorted(generator_list, key=cmp_to_key(generator_cmp))
         
-        fields = []
-        for generator in sorted_generator_list:
-            fields.append(generator.get_field_name())
+        fields = [generator.get_field_name() for generator in sorted_generator_list]
 
         if self.format == 'csv':
             file.write(','.join(fields) + "\n")
         elif self.format == 'insert':
-            keys = self.__config['field'].keys()
-            fields_list = map(lambda x: "`%s`" % x, keys)
-            insert = "insert into `%s` (%s) values " % (self.__table_name, ", ".join(fields))
+            fields_list = map(lambda x: "`%s`" % x, fields)
+            insert = "insert into `%s` (%s) values " % (self.__table_name, ", ".join(fields_list))
             
             file.write(insert + "\n")
 
@@ -466,7 +410,18 @@ class Generator:
 
         source = None
         if 'source' in field_config:
-            source = field_config['source']
+            source_def = field_config['source']
+            if isinstance(source_def, list):
+                source = source_def
+            elif source_def.startswith('range(') and source_def.endswith(')'):
+                all = re.findall("range\(\s*(\d+)\s*,\s*(\d+)\s*\)", source_def)
+                if len(all) > 0:
+                    s, e = all[0]
+                    source = list(range(int(s), int(e)))
+                else:
+                    print("Bad range!")
+                    exit()
+
         if 'sourcefile' in field_config:
             with open(field_config['sourcefile'], 'r', encoding='UTF-8') as file:
                 lines = file.readlines()
