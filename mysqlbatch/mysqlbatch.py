@@ -5,39 +5,29 @@ import MySQLdb
 from optparse import OptionParser
 from functools import *
 import random, re, sys, time, hashlib
-
-
-MD5 = hashlib.md5()
+from methods import *
 
 def usage():
     return """
     Any
     """
 
-def unixtime(datestr):
-    return int(DateParse.parse(datestr).timestamp())
+def handle_open_close(exp: str, s: int, e: int):
+    if exp.startswith("("): s += 1
+    if exp.endswith("]"): e += 1
+    return range(s, e)
 
 def parse_int_range(exp: str):
     exp = exp.strip()
     digits = re.findall("\s*\d+\s*", exp)
     s, e = int(digits[0]), int(digits[1])
-    if exp.startswith("("):
-        s += 1
-    if exp.endswith("]"):
-        e += 1
-    # print("Range(%d,%d)" % (s, e))
-    return range(s, e)
+    return handle_open_close(exp, s, e)
 
 def parse_time_range(exp: str):
     exp = exp.strip()
     times = re.findall("\s*\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}\s*", exp)
     s, e = unixtime(times[0]), unixtime(times[1])
-    if exp.startswith("("):
-        s += 1
-    if exp.endswith("]"):
-        e += 1
-    # print("Range(%d,%d) [%s ~ %s]" % (s, e, times[0], times[1]))
-    return range(s, e) 
+    return handle_open_close(exp, s, e)
 
 g_generator_types = dict()
 g_source_types = dict()
@@ -87,20 +77,19 @@ def FieldValueSource(**args):
            
     return field_value_generator    
 
-##########################################
-# Generators
+
 @FieldValueGenerator(name='random')
 class RandomGenerator:
     def __str__(self):
-        return "<!Random %s>" % self.get_field_name() 
+        return "<Random(%s)>" % self.get_field_name()
+
     def __next__(self):
         return random.choice(self.get_source())
 
-# Generators
 @FieldValueGenerator(name='rolling')
 class RollingGenerator:
     def __str__(self):
-        return "<!Rolling>"
+        return "<Rolling(%s)>" % self.get_field_name()
 
     def initialize(self):
         self.iterator = iter(self.get_source())
@@ -220,7 +209,11 @@ class DependsGenerator:
         if self.reletive_row_index == 0:
             value = self.row_data[self.depends_field_name]
             print("==", value , self.method)
-            return hashlib.new('md5', str(value).encode("utf8")).hexdigest()
+            method = get_method(self.method)
+            if method:
+                return method(value)
+            else:
+                return value
         elif self.reletive_row_index == -1:
             if not self.last_row_data:
                 return self.init_value
