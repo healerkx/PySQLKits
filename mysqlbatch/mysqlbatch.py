@@ -1,11 +1,10 @@
-# 
-import random
+#! python3 
 from dateutil import parser as DateParse
-import time
 import pytoml
-import MySQLdb, re, sys
+import MySQLdb
 from optparse import OptionParser
 from functools import *
+import random, re, sys, time
 
 def usage():
     return """
@@ -14,6 +13,28 @@ def usage():
 
 def unixtime(datestr):
     return int(DateParse.parse(datestr).timestamp())
+
+def parse_int_range(exp: str):
+    exp = exp.strip()
+    digits = re.findall("\s*\d+\s*", exp)
+    s, e = int(digits[0]), int(digits[1])
+    if exp.startswith("("):
+        s += 1
+    if exp.endswith("]"):
+        e += 1
+    print("Range(%d,%d)" % (s, e))
+    return range(s, e)
+
+def parse_time_range(exp: str):
+    exp = exp.strip()
+    times = re.findall("\s*\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}\s*", exp)
+    s, e = unixtime(times[0]), unixtime(times[1])
+    if exp.startswith("("):
+        s += 1
+    if exp.endswith("]"):
+        e += 1
+    print("Range(%d,%d) [%s ~ %s]" % (s, e, times[0], times[1]))
+    return range(s, e) 
 
 g_generator_types = dict()
 g_source_types = dict()
@@ -157,59 +178,6 @@ class RelatedDataGenerator:
         # print("V", line, self.field_index, value)
         return value
 
-# Random datetime Generator
-@FieldValueGenerator(name='datatime')
-class DatetimeRange:
-    def initialize(self):
-        if 'begin' in self.flags:
-            self.begin = unixtime(self.flags['begin'])
-        if 'end' in self.flags:
-            self.end = unixtime(self.flags['end'])
-
-    def __next__(self):
-        self.values = range(self.begin, self.end)
-        ts = random.choice(self.values)
-        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts)) 
-
-# int Generator
-@FieldValueGenerator(name='intrange')
-class IntegerRange:
-    values = None
-    current = None
-    repeat_times = 0
-    repeat_count = 0
-    step = 1
-    def adapt(self, values):
-        self.values = values
-
-    def initialize(self):
-        if 'begin' in self.flags:
-            self.current = self.flags['begin']
-        if 'step' in self.flags:
-            self.step = self.flags['step']
-        if 'repeat_times' in self.flags:
-            self.repeat_times = self.flags['repeat_times']
-
-    def __next__(self):
-        if self.values is None:
-            self.values = range(self.flags['begin'], self.flags['end'])
-        # Repeat
-        if self.repeat_times > 0 and self.repeat_count < self.repeat_times:
-            self.repeat_count += 1
-            return self.current
-
-        self.repeat_count = 0    
-
-        if 'order' in self.flags:
-            if self.flags['order'] == 'asc':
-                self.current += self.step
-                return self.current
-            elif self.flags['order'] == 'desc':
-                self.current -= self.step
-                return self.current
-        
-        self.current = random.choice(self.values)
-        return self.current
 
 @FieldValueGenerator(name='depends')
 class DependsGenerator:
@@ -413,15 +381,10 @@ class Generator:
             source_def = field_config['source']
             if isinstance(source_def, list):
                 source = source_def
-            elif source_def.startswith('range(') and source_def.endswith(')'):
-                all = re.findall("range\(\s*(\d+)\s*,\s*(\d+)\s*\)", source_def)
-                if len(all) > 0:
-                    s, e = all[0]
-                    source = list(range(int(s), int(e)))
-                else:
-                    print("Bad range!")
-                    exit()
-
+            elif source_def.startswith('int.range'):
+                source = parse_int_range(source_def[len('int.range'):])
+            elif source_def.startswith('time.range'):
+                source = parse_time_range(source_def[len('time.range'):])
         if 'sourcefile' in field_config:
             with open(field_config['sourcefile'], 'r', encoding='UTF-8') as file:
                 lines = file.readlines()
@@ -452,7 +415,6 @@ def main(options, args):
 """
 """
 if __name__ == '__main__':
-
     parser = OptionParser()
 
     parser.add_option("-d", "--database", action="store", dest="database", help="Provide destination database")
@@ -466,5 +428,3 @@ if __name__ == '__main__':
         print(usage())
         exit()
     main(options, args)
-
-

@@ -17,7 +17,11 @@ depends="username"
 
 [field.age]
 generator="random"
-source="range(20, 90)"
+source="int.range(20, 90)"
+
+[field.leave_time]
+generator="random"
+source="time.range('2018-01-01 00:00:00', '2018-09-01 00:00:00')"
 
 
 [field.register_time]
