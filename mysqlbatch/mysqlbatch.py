@@ -208,12 +208,8 @@ class DependsGenerator:
     def __next__(self):
         if self.reletive_row_index == 0:
             value = self.row_data[self.depends_field_name]
-            print("==", value , self.method)
             method = get_method(self.method)
-            if method:
-                return method(value)
-            else:
-                return value
+            return method(value)
         elif self.reletive_row_index == -1:
             if not self.last_row_data:
                 return self.init_value
@@ -301,7 +297,7 @@ class Generator:
                 val = next(generator)
                 row_data[field] = val
                 if isinstance(val, str):
-                    print("#", generator, val)
+                    # print("#", generator, val)
                     v.append("'%s'" % str(val))
                 elif isinstance(val, int) or isinstance(val, float):
                     v.append("%s" % str(val))
@@ -328,7 +324,7 @@ class Generator:
 
         generator_list = list(self.__generators.values())
         for generator in generator_list:
-            print("BS", generator)
+            pass
         sorted_generator_list = sorted(generator_list, key=cmp_to_key(generator_cmp))
         
         fields = [generator.get_field_name() for generator in sorted_generator_list]
@@ -387,7 +383,6 @@ class Generator:
                 lines = file.readlines()
                 source = list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), lines)))
         if generator_name == "depends":
-            print(field_config)
             g.set_depends_field_name(field_config['depends'])
             if 'method' in field_config:
                 g.set_method(field_config['method'])

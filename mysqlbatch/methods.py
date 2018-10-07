@@ -31,8 +31,11 @@ def unix_time(datestr):
 print(unix_time("2018-01-01"))
 
 
+def identity(x):
+    return x
+
 def get_method(method_name):
     if method_name in g_methods:
         return g_methods[method_name]
-    return None
+    return identity
 

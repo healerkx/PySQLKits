@@ -14,7 +14,6 @@ method="md5"
 
 [field.mobile]
 generator="china.mobile"
-depends="username"
 
 [field.age]
 generator="random"
