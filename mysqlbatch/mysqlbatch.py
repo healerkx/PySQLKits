@@ -5,6 +5,7 @@ import time
 import pytoml
 import MySQLdb, re, sys
 from optparse import OptionParser
+from functools import *
 
 def usage():
     return """
@@ -13,7 +14,6 @@ def usage():
 
 def unixtime(datestr):
     return int(DateParse.parse(datestr).timestamp())
-
 
 g_generator_types = dict()
 g_source_types = dict()
@@ -28,10 +28,11 @@ def FieldValueGenerator(**args):
             args = dict()
             source = None
 
-            def super_initialize(self):
-                self.args = args
-                if hasattr(self, 'initialize'):
-                    self.initialize()
+            def set_field_name(self, field_name):
+                self.field_name = field_name
+
+            def get_field_name(self):
+                return self.field_name
 
             def set_source(self, source):
                 self.source = source
@@ -39,8 +40,9 @@ def FieldValueGenerator(**args):
             def get_source(self):
                 return self.source
 
-            def reset(self):
-                pass
+            def get_generator_name(self):
+                return generator_name
+
         g_generator_types[generator_name] = FieldValueGeneratorClass
         return FieldValueGeneratorClass
            
@@ -65,13 +67,16 @@ def FieldValueSource(**args):
 # Generators
 @FieldValueGenerator(name='random')
 class RandomGenerator:
-
+    def __str__(self):
+        return "<!Random %s>" % self.get_field_name() 
     def __next__(self):
         return random.choice(self.get_source())
 
 # Generators
 @FieldValueGenerator(name='rolling')
 class RollingGenerator:
+    def __str__(self):
+        return "<!Rolling>"
 
     def initialize(self):
         self.iterator = iter(self.get_source)
@@ -212,6 +217,9 @@ class DependsGenerator:
     __field_name = ''
     field_index = -1
 
+    def __str__(self):
+        return "<!Depends %s>" % self.get_field_name()
+
     def initialize(self):
         print(dir(self))
         if 'reletive_row_index' in self.args:
@@ -315,6 +323,22 @@ class ChinaMobile:
             v = next(self)
             yield v
 
+
+def depends_depth_cmp(x, y) -> int:
+    return 0
+
+def generator_cmp(x, y) -> int:
+    gn1 = x.get_generator_name()
+    gn2 = y.get_generator_name()
+    if gn1 == 'depends' and gn2 == 'depends':
+        return depends_depth_cmp(x, y)
+    if gn1 == 'depends':
+        return 1
+    if gn2 == 'depends':
+        return -1
+    return -1
+        
+
 """
 main class for insertion
 """
@@ -342,17 +366,20 @@ class Generator:
     def set_related_data_source(self, related_data_source):
         self.related_data_source = related_data_source
 
-    def __generate_insert(self, times, i):
+    def __generate_value(self, times, i, sorted_generator_list):
+        
+        # print(sorted_generators)
         f, v, row_data = [], [], []
         field_names = self.__config['field'].keys()
-        for field in field_names:
+        for generator in sorted_generator_list:
+            field = generator.get_field_name()
             f.append(field)
-            generator = self.__generators[field]
-            if not generator:
-                print("!!" * 20)
             
-            if isinstance(generator, DependsGenerator):
-                generator.set_row_data(v, self.last_row)
+            if not generator:
+                print("No generator for field `%s`" % field)
+            
+            if isinstance(generator, DependsGenerator):   
+                generator.set_row_data(row_data, self.last_row)
 
             if generator is None:
                 row_data.append(None)
@@ -361,6 +388,7 @@ class Generator:
                 val = next(generator)
                 row_data.append(val)
                 if isinstance(val, str):
+                    print("#", generator, val)
                     v.append("'%s'" % str(val))
                 elif isinstance(val, int) or isinstance(val, float):
                     v.append("%s" % str(val))
@@ -382,27 +410,34 @@ class Generator:
         
         field_configs = self.__config['field']
         for field_name in field_configs:
-            print(field_name)
             generator = self.create_generator(field_name)
-            print(generator)
+            # print(field_name, generator)
             self.__generators[field_name] = generator
 
+        generator_list = list(self.__generators.values())
+        for generator in generator_list:
+            print("BS", generator)
+        sorted_generator_list = sorted(generator_list, key=cmp_to_key(generator_cmp))
+        
+        fields = []
+        for generator in sorted_generator_list:
+            fields.append(generator.get_field_name())
+
         if self.format == 'csv':
-            file.write(','.join(self.fields_order) + "\n")
+            file.write(','.join(fields) + "\n")
         elif self.format == 'insert':
             keys = self.__config['field'].keys()
             fields_list = map(lambda x: "`%s`" % x, keys)
-            insert = "insert into `%s` (%s) values " % (self.__table_name, ", ".join(fields_list))
-            print("####", insert)
+            insert = "insert into `%s` (%s) values " % (self.__table_name, ", ".join(fields))
+            
             file.write(insert + "\n")
 
         for i in range(0, times):
-            value = self.__generate_insert(times, i)
-            print("@" * 10, value)
+            value = self.__generate_value(times, i, sorted_generator_list)
             yield value
 
-            if self.related_data_source is not None:
-                self.related_data_source.reset_choice()
+            #if self.related_data_source is not None:
+            #    self.related_data_source.reset_choice()
 
 
     def perform(self, times, filename, format='inserts'):
@@ -413,7 +448,6 @@ class Generator:
 
         self.format = format
         for line in self.generate(times, file):
-            # print(line)
             file.write(line + "\n")
 
         file.close()
@@ -428,6 +462,7 @@ class Generator:
 
         generator_type = g_generator_types[generator_name]
         g = generator_type()
+        g.set_field_name(field_name)
 
         source = None
         if 'source' in field_config:
@@ -438,9 +473,6 @@ class Generator:
                 source = list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), lines)))
         
         g.set_source(source)
-        
-        if hasattr(g, 'super_initialize'):
-            g.super_initialize()
         if hasattr(g, 'initialize'):
             g.initialize()
 

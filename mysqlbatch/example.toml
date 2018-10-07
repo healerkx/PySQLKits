@@ -1,7 +1,7 @@
 
 
 [table]
-name="user"
+name="user2"
 
 
 
@@ -11,10 +11,17 @@ sourcefile="chinese_names.txt"
 
 [field.password]
 generator="depends"
-distribution="random"
-source=[1, 2, 3]
+source="username"
+
+[field.password2]
+generator="depends"
+source="username"
 
 [field.register_time]
 generator="random"
 distribution="random"
-source=["1", "2"]
+source=["1", "2", "5", "8"]
+
+[field.last_login_time]
+generator="depends"
+source="username"
