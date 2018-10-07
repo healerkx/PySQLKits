@@ -4,7 +4,10 @@ import pytoml
 import MySQLdb
 from optparse import OptionParser
 from functools import *
-import random, re, sys, time
+import random, re, sys, time, hashlib
+
+
+MD5 = hashlib.md5()
 
 def usage():
     return """
@@ -22,7 +25,7 @@ def parse_int_range(exp: str):
         s += 1
     if exp.endswith("]"):
         e += 1
-    print("Range(%d,%d)" % (s, e))
+    # print("Range(%d,%d)" % (s, e))
     return range(s, e)
 
 def parse_time_range(exp: str):
@@ -33,7 +36,7 @@ def parse_time_range(exp: str):
         s += 1
     if exp.endswith("]"):
         e += 1
-    print("Range(%d,%d) [%s ~ %s]" % (s, e, times[0], times[1]))
+    # print("Range(%d,%d) [%s ~ %s]" % (s, e, times[0], times[1]))
     return range(s, e) 
 
 g_generator_types = dict()
@@ -100,7 +103,7 @@ class RollingGenerator:
         return "<!Rolling>"
 
     def initialize(self):
-        self.iterator = iter(self.get_source)
+        self.iterator = iter(self.get_source())
 
     def __next__(self):
         try:
@@ -183,21 +186,17 @@ class RelatedDataGenerator:
 class DependsGenerator:
     reletive_row_index = 0
     __field_name = ''
+    method = None
     field_index = -1
 
     def __str__(self):
         return "<!Depends %s>" % self.get_field_name()
 
     def initialize(self):
-        print(dir(self))
-        if 'reletive_row_index' in self.args:
-            self.reletive_row_index = self.args['reletive_row_index']
-            assert(self.reletive_row_index <= 0)
         if 'field_name' in self.args:
             self.__field_name = self.args['field_name']
         if 'init_value' in self.args:
             self.init_value = self.args['init_value']
-
         if 'converter' in self.args:
             self.converter = self.args['converter']
 
@@ -207,16 +206,21 @@ class DependsGenerator:
     def get_field_name(self):
         return self.__field_name
 
-    def set_field_index(self, field_index):
-        self.field_index = field_index
+    def set_depends_field_name(self, field_name):
+        self.depends_field_name = field_name
     
     def set_row_data(self, row_data, last_row_data):
         self.row_data = row_data
         self.last_row_data = last_row_data
 
+    def set_method(self, method):
+        self.method = method
+
     def __next__(self):
         if self.reletive_row_index == 0:
-            return self.row_data[self.field_index]
+            value = self.row_data[self.depends_field_name]
+            print("==", value , self.method)
+            return hashlib.new('md5', str(value).encode("utf8")).hexdigest()
         elif self.reletive_row_index == -1:
             if not self.last_row_data:
                 return self.init_value
@@ -285,7 +289,7 @@ class Generator:
         self.related_data_source = related_data_source
 
     def __generate_value(self, times, i, sorted_generator_list):
-        f, v, row_data = [], [], []
+        f, v, row_data = [], [], dict()
         field_names = self.__config['field'].keys()
         for generator in sorted_generator_list:
             field = generator.get_field_name()
@@ -298,11 +302,11 @@ class Generator:
                 generator.set_row_data(row_data, self.last_row)
 
             if generator is None:
-                row_data.append(None)
+                row_data[field] = None
                 v.append("null")
             else:
                 val = next(generator)
-                row_data.append(val)
+                row_data[field] = val
                 if isinstance(val, str):
                     print("#", generator, val)
                     v.append("'%s'" % str(val))
@@ -385,11 +389,16 @@ class Generator:
                 source = parse_int_range(source_def[len('int.range'):])
             elif source_def.startswith('time.range'):
                 source = parse_time_range(source_def[len('time.range'):])
-        if 'sourcefile' in field_config:
+        elif 'sourcefile' in field_config:
             with open(field_config['sourcefile'], 'r', encoding='UTF-8') as file:
                 lines = file.readlines()
                 source = list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), lines)))
-        
+        if generator_name == "depends":
+            print(field_config)
+            g.set_depends_field_name(field_config['depends'])
+            if 'method' in field_config:
+                g.set_method(field_config['method'])
+
         g.set_source(source)
         if hasattr(g, 'initialize'):
             g.initialize()

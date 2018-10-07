@@ -9,7 +9,8 @@ sourcefile="chinese.names"
 
 [field.password]
 generator="depends"
-source="username"
+depends="register_time"
+method="md5"
 
 [field.mobile]
 generator="china.mobile"
@@ -25,10 +26,9 @@ source="time.range('2018-01-01 00:00:00', '2018-09-01 00:00:00')"
 
 
 [field.register_time]
-generator="random"
-distribution="random"
-source=["1", "2", "5", "8"]
+generator="rolling"
+source="time.range('2018-01-01 00:00:00', '2019-09-01 00:00:00')"
 
 [field.last_login_time]
 generator="depends"
-source="username"
+depends="register_time"
