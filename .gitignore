@@ -60,3 +60,5 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+/mysqlmigration/parser.out
+/mysqlmigration/parsetab.py
