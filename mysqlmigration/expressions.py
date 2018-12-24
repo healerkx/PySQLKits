@@ -1,5 +1,4 @@
 
-
 # Lex
 tokens = (
     'NS',
@@ -38,17 +37,17 @@ reserved = {
     
 }
 
-use_lex_print = False
-use_yacc_print = False
+print_lex_info = False
+print_yacc_info = False
 
 
-def lex_print(*p):
-    if not use_lex_print:
+def print_lex(*p):
+    if not print_lex_info:
         return
     print('Lex:', p)
 
-def yacc_print(*p):
-    if not use_yacc_print:
+def print_yacc(*p):
+    if not print_yacc_info:
         return    
     print('Yacc:', p)
 
@@ -56,13 +55,13 @@ def yacc_print(*p):
 def t_NS(t):
     r'@[_A-Za-z0-9]*'
     t.type = reserved.get(t.value, 'NS')    # Check for reserved words
-    lex_print(t)
+    print_lex(t)
     return t
 
 def t_NAME(t):
     r'[A-Za-z_][_A-Za-z0-9]*'
     t.type = reserved.get(t.value, 'NAME')    # Check for reserved words
-    lex_print(t)
+    print_lex(t)
     return t
 
 def t_FLOAT(t):
@@ -89,12 +88,12 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-t_ignore            = r" \t"
+t_ignore            = " \t"
 t_ignore_COMMENT    = r'\#.*'
 ######################################################################
 # yacc
 def p_error(p):
-    yacc_print("Error?", p)
+    print_yacc("<Error>", p)
 
 def p_expr(p):
     """expr         : INT
@@ -108,7 +107,7 @@ def p_expr(p):
 def p_symbol(p):
     """symbol       : NAME
                     | symbol DOT NAME"""
-    yacc_print('symbol', p)
+    print_yacc('symbol', p)
     if len(p) == 2:
         p[0] = ('sym', p[1])
     elif len(p) == 4:
@@ -116,7 +115,7 @@ def p_symbol(p):
 
 def p_arrayaccess(p):
     """arrayaccess  : symbol LBRACKET expr RBRACKET"""
-    yacc_print('arrayaccess', p)
+    print_yacc('arrayaccess', p)
     if len(p) == 5:
         p[0] = ('arrayaccess', p[1], p[3])
 
@@ -157,17 +156,14 @@ def p_params(p):
     else:
         p[0] = []
 
-
 def p_func(p):
     """func         : NS DOT NAME params
                     | NAME params"""
     if len(p) > 3:
-        print("--" * 4)
-        print(len(p), p[3], p[4])
         p[0] = ('func', p[3], p[4], p[1])
     else:
-        p[0] = ('func', p[1], p[2], '<@build-in>')
-    
+        p[0] = ('func', p[1], p[2], None)
+
 def p_statement(p):
     """statement    :   expr TO expr"""
     p[0] = ("statement", p[1], p[3])
@@ -185,21 +181,33 @@ def p_statements(p):
         p[0].append(p[2])
 
 
-if __name__ == '__main__':
-    import ply.lex as lex
-    import ply.yacc as yacc
+class Parser:
+    __debug = False
 
-    use_lex_print = True
-    use_yacc_print = True
-    lex.lex()
-    parser = yacc.yacc(start = 'statements')
+    def __init__(self, debug=False):
+        self.__debug = debug
+
+    def parse(self, code_lines):
+        import ply.lex as lex
+        import ply.yacc as yacc
+
+        global print_lex_info
+        global print_yacc_info
+        if self.__debug:
+            print_lex_info = True
+            print_yacc_info = True
+        lex.lex()
+        parser = yacc.yacc(start='statements')
+        statements = parser.parse(code_lines)
+        return statements
+
+if __name__ == '__main__':
     
     code = """
 @mysql.hash(aa) => b.f
 f(a.b) => b.c
 """
-    statements = parser.parse(code)
+    statements = Parser(True).parse(code)
     print("=" * 40)
-    print(statements)
     for s in statements:
         print(s)

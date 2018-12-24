@@ -62,3 +62,6 @@ target/
 .ipynb_checkpoints
 /mysqlmigration/parser.out
 /mysqlmigration/parsetab.py
+/.vscode/settings.json
+/mysqlbatch/insert.sql
+/.vscode/.ropeproject
