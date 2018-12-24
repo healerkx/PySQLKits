@@ -1,10 +1,10 @@
 #! python3 
 from dateutil import parser as DateParse
 import pytoml
-import MySQLdb
+import pymysql
 from optparse import OptionParser
-from functools import *
 import random, re, sys, time, hashlib
+from functools import cmp_to_key
 from methods import *
 
 def usage():

@@ -1,9 +1,7 @@
 #! python3 
 from dateutil import parser as DateParse
 import pytoml
-import MySQLdb
 from optparse import OptionParser
-from functools import *
 import random, re, sys, time, hashlib, base64
 
 g_methods = dict()
@@ -28,8 +26,8 @@ def md5(s):
 def unix_time(datestr):
     return unixtime(datestr)
 
-@method("base64")
-def base64(s):
+@method("base64encode")
+def base64encode(s):
     return base64.b64encode(s)
 
 @method("strlen")

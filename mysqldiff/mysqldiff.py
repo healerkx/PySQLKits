@@ -1,6 +1,6 @@
 # Refer https://github.com/lexchou/utilities/blob/master/db_diff
 
-import MySQLdb, re, sys
+import pymysql, re, sys
 from optparse import OptionParser
 
 def db_scheme(server, user, passwd, db, table_name_pattern=None):
@@ -12,7 +12,7 @@ def db_scheme(server, user, passwd, db, table_name_pattern=None):
 
     ret = []
     try:
-        db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, port=port, charset="utf8")
+        db = pymysql.connect(host=host, user=user, passwd=passwd, db=db, port=port, charset="utf8")
         print("Server [%s:%d] connected" % (server, port))
     except:
         print("Server [%s:%d] failed to connect" % (server, port))
