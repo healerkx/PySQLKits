@@ -1,7 +1,7 @@
 
 
 import pymysql, re, sys
-
+from pymysql.cursors import DictCursor
 
 class Field:
     def __init__(self, table, field, converter=None):
@@ -11,6 +11,9 @@ class Field:
 
     def table(self):
         return self.__table
+
+    def field_name(self):
+        return self.__field
 
 
 class Table:
@@ -69,7 +72,7 @@ class Condition:
         self.condition = condition
 
     def set(self, field, value):
-        print("set", field, value)
+        # print("set", field, value)
         self.__pairs[field] = value
 
     def pairs(self):
@@ -86,7 +89,8 @@ class Migration:
         try:
             self.conn = pymysql.connect(host=server, user=username, passwd=passwd, port=port, charset="utf8")
             print("Server [%s:%d] connected" % (server, port))
-            return Connection(self.conn)
+            conn = Connection(self.conn)
+            return conn
         except:
             print("Server [%s:%d] failed to connect" % (server, port))
             exit()        
@@ -94,7 +98,7 @@ class Migration:
     def receiver(self):
         return Receiver(self)
 
-    def when(self, field, condition):
+    def begin(self, field, condition=None):
         table = field.table()
         database = table.database()
         if not self.__condition:
@@ -108,26 +112,28 @@ class Migration:
 
     def generate(self):
         if self.__condition:
-            self.__generate(self.__condition.pairs())
+            self.__generate(self.__condition)
 
-    def __generate(self, pairs):
-        for (d, s) in pairs.items():
-            print(d, s)
-            
-
+    def __generate(self, condition):
+        cursor = self.conn.cursor(DictCursor)
+        cursor.execute("select * from kits.pet")
+        data = cursor.fetchall()
+        for item in data:
+            for (d, s) in condition.pairs().items():
+                print(d, s, item[s.field_name()])
 
 
 if __name__ == "__main__":
     
     m = Migration()
     conn = m.connect("127.0.0.1", "root", "root")
-    table = conn.db("factory").table('user')
+    table = conn.db("kits").table('pet')
 
     r = m.receiver()
     
-    m.when(table.field("id"), lambda x: x % 2 == 0)
-    r.id = table.field('id')
-    r.created_at = table.field('create_time', "from_unixtime")
+    m.begin(table.field("id"), lambda x: x % 2 == 0)
+    r.id = table.field('pet_id')
+    r.created_at = table.field('pet_name')
     m.end()
 
     m.generate()
