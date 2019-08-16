@@ -41,6 +41,7 @@ def FieldValueGenerator(**args):
         class FieldValueGeneratorClass(clz):
             args = dict()
             source = None
+            method = None
 
             def set_field_name(self, field_name):
                 self.field_name = field_name
@@ -57,6 +58,12 @@ def FieldValueGenerator(**args):
             def get_generator_name(self):
                 return generator_name
 
+            def set_method(self, method):
+                self.method = method
+            
+            def get_method(self):
+                return self.method
+
         g_generator_types[generator_name] = FieldValueGeneratorClass
         return FieldValueGeneratorClass
            
@@ -67,6 +74,7 @@ def FieldValueSource(**args):
     if not source_name:
         print("FieldValueSource MUST have a name")
         exit()
+
     def field_value_source(clz):
         class FieldValueSourceClass(clz):
 
@@ -84,7 +92,12 @@ class RandomGenerator:
         return "<Random(%s)>" % self.get_field_name()
 
     def __next__(self):
-        return random.choice(self.get_source())
+        v = random.choice(self.get_source())
+        method = self.get_method()
+        if method:
+            return method(v)
+        else:
+            return v
 
 @FieldValueGenerator(name='rolling')
 class RollingGenerator:
@@ -96,7 +109,12 @@ class RollingGenerator:
 
     def __next__(self):
         try:
-            return next(self.iterator)
+            v = next(self.iterator)
+            method = self.get_method()
+            if method:
+                return method(v)
+            else:
+                return v            
         except:
             self.iterator = iter(self.iterator)
 
@@ -167,12 +185,6 @@ class DependsGenerator:
         if 'converter' in self.args:
             self.converter = self.args['converter']
 
-    def set_field_name(self, field_name):
-        self.__field_name = field_name
-
-    def get_field_name(self):
-        return self.__field_name
-
     def set_depends_field_name(self, field_name):
         self.depends_field_name = field_name
     
@@ -180,15 +192,16 @@ class DependsGenerator:
         self.row_data = row_data
         self.last_row_data = last_row_data
 
-    def set_method(self, method):
-        self.method = method
-
     def __next__(self):
         if self.reletive_row_index == 0:
-            value = self.row_data[self.depends_field_name]
-            method = get_method(self.method)
-            return method(value)
+            v = self.row_data[self.depends_field_name]
+            method = self.get_method()
+            if method:
+                return method(v)
+            else:
+                return v  
         elif self.reletive_row_index == -1:
+            raise Error("??")
             if not self.last_row_data:
                 return self.init_value
             if self.converter:
@@ -248,6 +261,7 @@ class Generator:
         f, v, row_data = [], [], dict()
         field_names = self.__config['field'].keys()
         for generator in sorted_generator_list:
+            print(generator)
             field = generator.get_field_name()
             f.append(field)
             
@@ -351,8 +365,9 @@ class Generator:
                 source = list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), lines)))
         if generator_name == "depends":
             g.set_depends_field_name(field_config['depends'])
-            if 'method' in field_config:
-                g.set_method(field_config['method'])
+
+        if 'method' in field_config:
+            g.set_method(load_method(field_config['method']))
 
         g.set_source(source)
         if hasattr(g, 'initialize'):

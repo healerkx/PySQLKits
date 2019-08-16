@@ -22,9 +22,15 @@ def unixtime(datestr):
 def md5(s):
     return hashlib.new('md5', str(s).encode("utf8")).hexdigest()
 
+@method("format_time")
+def format_time(unix_timestamp):
+    time_s = time.localtime(int(unix_timestamp))
+    return time.strftime("%Y-%m-%d %H:%M:%S", time_s) 
+
+
 @method("unix_time")
 def unix_time(datestr):
-    return unixtime(datestr)
+    return unixtime(datestr)    
 
 @method("base64encode")
 def base64encode(s):
@@ -37,7 +43,7 @@ def strlen(s):
 def identity(x):
     return x
 
-def get_method(method_name):
+def load_method(method_name):
     if method_name in g_methods:
         return g_methods[method_name]
     return identity

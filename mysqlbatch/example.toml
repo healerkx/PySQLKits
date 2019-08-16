@@ -21,10 +21,12 @@ source="int.range(20, 90)"
 [field.leave_time]
 generator="random"
 source="time.range('2018-01-01 00:00:00', '2018-09-01 00:00:00')"
+#method="format_time"
 
 [field.register_time]
 generator="rolling"
 source="time.range('2018-01-01 00:00:00', '2019-09-01 00:00:00')"
+method="format_time"
 
 [field.last_login_time]
 generator="depends"
