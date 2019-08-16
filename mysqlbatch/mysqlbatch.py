@@ -69,22 +69,6 @@ def FieldValueGenerator(**args):
            
     return field_value_generator
 
-def FieldValueSource(**args):
-    source_name = args['name']
-    if not source_name:
-        print("FieldValueSource MUST have a name")
-        exit()
-
-    def field_value_source(clz):
-        class FieldValueSourceClass(clz):
-
-            def reset(self):
-                pass
-        g_source_types[source_name] = FieldValueSourceClass
-        return FieldValueGeneratorClass
-           
-    return field_value_generator    
-
 
 @FieldValueGenerator(name='random')
 class RandomGenerator:
@@ -261,7 +245,7 @@ class Generator:
         f, v, row_data = [], [], dict()
         field_names = self.__config['field'].keys()
         for generator in sorted_generator_list:
-            print(generator)
+            # print(generator)
             field = generator.get_field_name()
             f.append(field)
             
