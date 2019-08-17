@@ -102,54 +102,6 @@ class RollingGenerator:
         except:
             self.iterator = iter(self.iterator)
 
-# Related data about
-class RelatedDataSource:
-    """
-    Data source
-    """
-    __generators = {}
-    __header = None
-    __lines = []
-    __choice = None
-
-    def __init__(self, filename):
-        with open(filename, encoding='utf8') as file:
-            self.__header = list(map(lambda x: x.strip(), file.readline().split(',')))
-
-            for line in file.readlines():
-                items = list(map(lambda x: x.strip(), line.split(',')))
-                self.__lines.append(items)
-
-    def get_index(self, field_name):
-        index = 0
-        while True:
-            if self.__header[index] == field_name:
-                return index
-            index += 1
-            if index >= len(self.__header):
-                return -1
-        return -1
-
-    def get_lines(self):
-        return self.__lines
-
-    def get_generator(self, field_name):
-        generator = None
-        if field_name not in self.__generators:
-            generator = RelatedDataGenerator(self)
-            self.__generators[field_name] = generator
-        
-        generator.set_field_name(field_name)
-        return generator
-
-    def get_choice(self):
-        return self.__choice
-
-    def set_choice(self, choice):
-        self.__choice = choice
-
-    def reset_choice(self):
-        self.__choice = None
 
 @FieldValueGenerator(name='depends')
 class DependsGenerator:
@@ -185,7 +137,7 @@ class DependsGenerator:
             else:
                 return v  
         elif self.reletive_row_index == -1:
-            raise Error("??")
+            raise Exception("???")
             if not self.last_row_data:
                 return self.init_value
             if self.converter:
@@ -217,7 +169,7 @@ def generator_cmp(x, y) -> int:
 """
 main class for insertion
 """
-class Generator:
+class RowsDataGenerator:
     __table_name = None
     __config = None
     related_data_source = None
@@ -228,30 +180,20 @@ class Generator:
         self.__table_name = config['table']['name']
         print("table name -> %s" % self.__table_name)
         self.__config = config
-        for field_info in self.__config['field'].items():
-            field_name = field_info[0]
-            field_config = field_info[1]
-            generator_type = field_config['generator']
-            if generator_type == "dependent":
-                pass
-                #if config.get_field_name() == '':
-                #    config.set_field_name(field_name)
-
 
     def set_related_data_source(self, related_data_source):
         self.related_data_source = related_data_source
 
     def __generate_value(self, times, i, sorted_generator_list):
         f, v, row_data = [], [], dict()
-        field_names = self.__config['field'].keys()
+        # field_names = self.__config['field'].keys()
         for generator in sorted_generator_list:
             # print(generator)
             field = generator.get_field_name()
             f.append(field)
             
-            if not generator:
-                print("No generator for field `%s`" % field)
-            
+            # if not generator:
+            #     print("No generator for field `%s`" % field)
             if isinstance(generator, DependsGenerator):   
                 generator.set_row_data(row_data, self.last_row)
 
@@ -363,7 +305,7 @@ def perform(toml: dict, options):
     toml['times'] = int(options.times)
     toml['filename'] = options.filename
     toml['database'] = options.database
-    gen = Generator(toml)
+    gen = RowsDataGenerator(toml)
     gen.perform(int(options.times), options.filename, "insert")
 
 def main(options, args):
