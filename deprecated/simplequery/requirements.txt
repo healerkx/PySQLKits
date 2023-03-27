@@ -21,7 +21,7 @@ prettytable == 0.7.2
 pypoker == 0.0.2a
 
 # buildin_funcs.py: 5
-redis == 2.10.5
+redis == 4.5.3
 
 # buildin_funcs.py: 6
 # evaluator.py: 4
